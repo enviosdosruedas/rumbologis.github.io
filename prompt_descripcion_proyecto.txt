@@ -1,0 +1,22 @@
+Por favor, analiza el proyecto "Rumbo Envíos" y proporciona la siguiente información:
+
+1.  **Estructura Actual del Proyecto:**
+    *   Detalla el árbol de directorios y archivos principales del proyecto. Indica la ubicación de los componentes, las páginas, los esquemas de datos, los tipos, la configuración de Supabase, y cualquier otro archivo o carpeta relevante.
+
+2.  **Funcionalidades Implementadas:**
+    *   Describe las funcionalidades que la aplicación "Rumbo Envíos" ofrece actualmente. Específicamente, detalla las operaciones CRUD (Crear, Leer, Actualizar, Eliminar) disponibles para:
+        *   Gestión de Clientes.
+        *   Gestión de Repartidores.
+        *   Gestión de Clientes Reparto.
+    *   Menciona cómo se realiza la navegación entre estas secciones.
+
+3.  **Estructura Completa de la Base de Datos Actual (PostgreSQL/Supabase):**
+    *   Para cada tabla en la base de datos (`clientes`, `repartidores`, `clientes_reparto`):
+        *   Enumera todas las columnas.
+        *   Especifica el tipo de dato de cada columna (ej: UUID, TEXT, VARCHAR, INTEGER, DECIMAL, TIMESTAMP, etc.).
+        *   Indica si la columna es una clave primaria (PRIMARY KEY).
+        *   Indica si la columna es una clave foránea (FOREIGN KEY) y a qué tabla y columna hace referencia.
+        *   Menciona cualquier otra restricción importante (ej: UNIQUE, NOT NULL, DEFAULT).
+    *   Describe las relaciones entre las tablas.
+
+El objetivo es obtener una visión clara y completa del estado actual del proyecto "Rumbo Envíos", tanto a nivel de código como de estructura de datos.
