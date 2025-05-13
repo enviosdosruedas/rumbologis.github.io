@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ship, Users2, Truck } from "lucide-react";
+import { Ship, Users2, Truck, ClipboardList } from "lucide-react"; // Added ClipboardList
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
@@ -15,11 +16,16 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { 
+  SheetHeader as ShadcnSheetHeader, // Renamed import
+  SheetTitle as ShadcnSheetTitle    // Renamed import
+} from "@/components/ui/sheet"; // Corrected import source
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/clientes", label: "Clientes", icon: Users2 },
   { href: "/repartidores", label: "Repartidores", icon: Truck },
+  { href: "/clientes-reparto", label: "Clientes Reparto", icon: ClipboardList }, // New item
 ];
 
 export function AppSidebar({ children }: { children: React.ReactNode }) {
@@ -28,6 +34,9 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
+         <ShadcnSheetHeader className="h-0 p-0 overflow-hidden md:hidden"> {/* Added for mobile accessibility */}
+            <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
+        </ShadcnSheetHeader>
         <SidebarHeader className="p-4">
           <Link href="/clientes" className="flex items-center gap-2">
             <Ship className="w-8 h-8 text-primary" />
@@ -73,3 +82,4 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
