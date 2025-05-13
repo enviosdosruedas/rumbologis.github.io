@@ -8,18 +8,19 @@ import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
   Sidebar,
-  SidebarHeader,
-  SidebarContent,
+  SidebarHeader as CustomSidebarHeader, // Renamed to avoid conflict with ShadcnSheetHeader
+  SidebarContent as CustomSidebarContent, // Renamed to avoid conflict
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  useSidebar, // Import useSidebar
 } from "@/components/ui/sidebar";
 import { 
-  SheetHeader as ShadcnSheetHeader, // Renamed import
-  SheetTitle as ShadcnSheetTitle    // Renamed import
-} from "@/components/ui/sheet"; // Corrected import source
+  SheetHeader as ShadcnSheetHeader,
+  SheetTitle as ShadcnSheetTitle
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -28,24 +29,37 @@ const navItems = [
   { href: "/clientes-reparto", label: "Clientes Reparto", icon: ClipboardList }, // New item
 ];
 
+// This component will render the SheetHeader and SheetTitle only on mobile
+function MobileAccessibleSheetHeader() {
+  const { isMobile } = useSidebar();
+
+  if (!isMobile) {
+    return null;
+  }
+
+  return (
+    <ShadcnSheetHeader className="h-0 p-0 overflow-hidden">
+      <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
+    </ShadcnSheetHeader>
+  );
+}
+
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
-         <ShadcnSheetHeader className="h-0 p-0 overflow-hidden md:hidden"> {/* Added for mobile accessibility */}
-            <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
-        </ShadcnSheetHeader>
-        <SidebarHeader className="p-4">
+        <MobileAccessibleSheetHeader /> {/* Use the conditional component */}
+        <CustomSidebarHeader className="p-4">
           <Link href="/clientes" className="flex items-center gap-2">
             <Ship className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-semibold text-foreground group-data-[collapsible=icon]:hidden">
               Rumbo Envíos
             </h1>
           </Link>
-        </SidebarHeader>
-        <SidebarContent>
+        </CustomSidebarHeader>
+        <CustomSidebarContent>
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
@@ -62,7 +76,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-        </SidebarContent>
+        </CustomSidebarContent>
       </Sidebar>
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b bg-background md:justify-end">
