@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -52,9 +53,10 @@ export function ClientesRepartoTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Nombre Reparto</TableHead>
+              <TableHead>Cliente Principal</TableHead>
+              <TableHead>Nombre Cliente Reparto</TableHead>
               <TableHead>Dirección Reparto</TableHead>
+              <TableHead>Teléfono Reparto</TableHead>
               <TableHead>Tarifa</TableHead>
               <TableHead>Rango Horario</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
@@ -66,6 +68,7 @@ export function ClientesRepartoTable({
                 <TableCell>{getClienteNombre(cr.cliente_id)}</TableCell>
                 <TableCell>{cr.nombre_reparto}</TableCell>
                 <TableCell>{cr.direccion_reparto}</TableCell>
+                <TableCell>{cr.telefono_reparto || '-'}</TableCell>
                 <TableCell>{cr.tarifa ? cr.tarifa.toFixed(2) : '-'}</TableCell>
                 <TableCell>{cr.rango_horario}</TableCell>
                 <TableCell className="text-right space-x-2">

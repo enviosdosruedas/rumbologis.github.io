@@ -5,7 +5,8 @@ export interface ClienteReparto {
   cliente_id: string; 
   nombre_reparto: string;
   direccion_reparto: string;
-  tarifa: number;
+  telefono_reparto?: string; // Added telefono_reparto field
+  tarifa: number | null; // Allow null for tarifa
   rango_horario: string;
   created_at?: string; 
   updated_at?: string; 

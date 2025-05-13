@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +38,8 @@ export function ClienteRepartoForm({ onSubmit, defaultValues, clientes, isEditin
       cliente_id: defaultValues?.cliente_id || "",
       nombre_reparto: defaultValues?.nombre_reparto || "",
       direccion_reparto: defaultValues?.direccion_reparto || "",
-      tarifa: defaultValues?.tarifa || undefined, // Use undefined for optional number
+      telefono_reparto: defaultValues?.telefono_reparto || "",
+      tarifa: defaultValues?.tarifa === null ? undefined : defaultValues?.tarifa || undefined, // Handle null for optional number
       rango_horario: defaultValues?.rango_horario || "",
     },
   });
@@ -50,11 +52,11 @@ export function ClienteRepartoForm({ onSubmit, defaultValues, clientes, isEditin
           name="cliente_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cliente</FormLabel>
+              <FormLabel>Cliente Principal</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un cliente" />
+                    <SelectValue placeholder="Seleccione un cliente principal" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -75,9 +77,9 @@ export function ClienteRepartoForm({ onSubmit, defaultValues, clientes, isEditin
           name="nombre_reparto"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nombre (para este reparto)</FormLabel>
+              <FormLabel>Nombre Cliente Reparto</FormLabel>
               <FormControl>
-                <Input placeholder="Referencia para esta configuración" {...field} />
+                <Input placeholder="Nombre del cliente de reparto" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,9 +91,23 @@ export function ClienteRepartoForm({ onSubmit, defaultValues, clientes, isEditin
           name="direccion_reparto"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Dirección de Reparto</FormLabel>
+              <FormLabel>Dirección Cliente Reparto</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Calle Falsa 123, Ciudad" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="telefono_reparto"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Teléfono Cliente Reparto</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: +54 9 11 12345678" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,7 +121,21 @@ export function ClienteRepartoForm({ onSubmit, defaultValues, clientes, isEditin
             <FormItem>
               <FormLabel>Tarifa</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))} />
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  {...field} 
+                  value={field.value === null ? '' : field.value || ''} // Handle null and undefined for input display
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      field.onChange(null); // Set to null if empty
+                    } else {
+                      const num = parseFloat(val);
+                      field.onChange(isNaN(num) ? null : num); // Set to null if not a valid number
+                    }
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
