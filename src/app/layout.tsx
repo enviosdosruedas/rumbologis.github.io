@@ -1,18 +1,13 @@
+
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans'; // Corrected import for GeistSans
-import { GeistMono } from 'geist/font/mono'; // Corrected import for GeistMono
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"; // Added Toaster
+import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = GeistSans({ 
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = GeistMono({ 
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+// GeistSans and GeistMono are objects, not functions.
+// Their 'variable' property can be accessed directly.
+// e.g., GeistSans.variable will provide '--font-geist-sans'
 
 export const metadata: Metadata = {
   title: 'Rumbo Envíos',
@@ -25,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased">
         {children}
         <Toaster />
