@@ -9,7 +9,7 @@ import type { ClienteFormData } from "@/schemas/cliente-schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { LoadingScaffold } from "@/components/layout/loading-scaffold";
-
+import { CrudPageHeader } from "@/components/common/crud-page-header"; // Importar el nuevo componente
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -159,10 +159,10 @@ export default function ClientesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Gestión de Clientes</h2>
-        <CreateClienteDialog onCreate={handleCreateCliente} />
-      </div>
+      <CrudPageHeader 
+        title="Gestión de Clientes"
+        createDialogComponent={<CreateClienteDialog onCreate={handleCreateCliente} />}
+      />
       <ClientesTable 
         clientes={clientes} 
         onUpdateCliente={handleUpdateCliente} 

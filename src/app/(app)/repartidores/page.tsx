@@ -9,6 +9,7 @@ import type { RepartidorFormData } from "@/schemas/repartidor-schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { LoadingScaffold } from "@/components/layout/loading-scaffold";
+import { CrudPageHeader } from "@/components/common/crud-page-header"; // Importar el nuevo componente
 
 export default function RepartidoresPage() {
   const [repartidores, setRepartidores] = useState<Repartidor[]>([]);
@@ -158,10 +159,10 @@ export default function RepartidoresPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Gestión de Repartidores</h2>
-        <CreateRepartidorDialog onCreate={handleCreateRepartidor} />
-      </div>
+      <CrudPageHeader
+        title="Gestión de Repartidores"
+        createDialogComponent={<CreateRepartidorDialog onCreate={handleCreateRepartidor} />}
+      />
       <RepartidoresTable
         repartidores={repartidores}
         onUpdateRepartidor={handleUpdateRepartidor}
