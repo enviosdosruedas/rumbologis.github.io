@@ -28,7 +28,7 @@ export function ClienteForm({ onSubmit, defaultValues, isEditing = false }: Clie
       nombre: defaultValues?.nombre || "",
       direccion: defaultValues?.direccion || "",
       telefono: defaultValues?.telefono || "",
-      email: defaultValues?.email || "",
+      correo_electronico: defaultValues?.correo_electronico || "",
     },
   });
 
@@ -76,7 +76,7 @@ export function ClienteForm({ onSubmit, defaultValues, isEditing = false }: Clie
         />
         <FormField
           control={form.control}
-          name="email"
+          name="correo_electronico"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Correo Electrónico</FormLabel>

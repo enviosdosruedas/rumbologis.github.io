@@ -3,5 +3,5 @@ export interface Repartidor {
   nombre: string;
   identificacion: string;
   telefono: string;
-  vehiculo: string;
+  vehiculo_asignado: string;
 }

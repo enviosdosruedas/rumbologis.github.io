@@ -28,7 +28,7 @@ export function RepartidorForm({ onSubmit, defaultValues, isEditing = false }: R
       nombre: defaultValues?.nombre || "",
       identificacion: defaultValues?.identificacion || "",
       telefono: defaultValues?.telefono || "",
-      vehiculo: defaultValues?.vehiculo || "",
+      vehiculo_asignado: defaultValues?.vehiculo_asignado || "",
     },
   });
 
@@ -76,7 +76,7 @@ export function RepartidorForm({ onSubmit, defaultValues, isEditing = false }: R
         />
         <FormField
           control={form.control}
-          name="vehiculo"
+          name="vehiculo_asignado"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Vehículo Asignado</FormLabel>

@@ -17,9 +17,9 @@ import { EmptyStateCard } from "@/components/common/empty-state-card";
 
 interface ClientesRepartoTableProps {
   clientesReparto: ClienteReparto[];
-  clientes: Cliente[]; // To look up client names
-  onUpdateClienteReparto: (id: string, data: ClienteRepartoFormData) => void;
-  onDeleteClienteReparto: (id: string) => void;
+  clientes: Cliente[]; 
+  onUpdateClienteReparto: (id: number, data: ClienteRepartoFormData) => void;
+  onDeleteClienteReparto: (id: number) => void;
 }
 
 export function ClientesRepartoTable({ 
@@ -52,7 +52,6 @@ export function ClientesRepartoTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Código</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Nombre Reparto</TableHead>
               <TableHead>Dirección Reparto</TableHead>
@@ -64,12 +63,11 @@ export function ClientesRepartoTable({
           <TableBody>
             {clientesReparto.map((cr) => (
               <TableRow key={cr.id}>
-                <TableCell className="font-medium">{cr.codigo}</TableCell>
-                <TableCell>{getClienteNombre(cr.clienteId)}</TableCell>
-                <TableCell>{cr.nombreReparto}</TableCell>
-                <TableCell>{cr.direccionReparto}</TableCell>
-                <TableCell>{cr.tarifa.toFixed(2)}</TableCell>
-                <TableCell>{cr.rangoHorario}</TableCell>
+                <TableCell>{getClienteNombre(cr.cliente_id)}</TableCell>
+                <TableCell>{cr.nombre_reparto}</TableCell>
+                <TableCell>{cr.direccion_reparto}</TableCell>
+                <TableCell>{cr.tarifa ? cr.tarifa.toFixed(2) : '-'}</TableCell>
+                <TableCell>{cr.rango_horario}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <EditClienteRepartoDialog 
                     clienteReparto={cr} 
@@ -78,7 +76,7 @@ export function ClientesRepartoTable({
                   />
                   <DeleteClienteRepartoDialog 
                     clienteRepartoId={cr.id} 
-                    clienteRepartoCodigo={cr.codigo} 
+                    clienteRepartoNombre={cr.nombre_reparto} 
                     onDelete={onDeleteClienteReparto} 
                   />
                 </TableCell>

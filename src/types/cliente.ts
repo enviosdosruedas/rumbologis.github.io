@@ -3,5 +3,5 @@ export interface Cliente {
   nombre: string;
   direccion: string;
   telefono: string;
-  email: string;
+  correo_electronico: string;
 }

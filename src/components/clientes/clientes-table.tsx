@@ -43,7 +43,7 @@ export function ClientesTable({ clientes, onUpdateCliente, onDeleteCliente }: Cl
               <TableHead>Nombre</TableHead>
               <TableHead>Dirección</TableHead>
               <TableHead>Teléfono</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Correo Electrónico</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -53,7 +53,7 @@ export function ClientesTable({ clientes, onUpdateCliente, onDeleteCliente }: Cl
                 <TableCell className="font-medium">{cliente.nombre}</TableCell>
                 <TableCell>{cliente.direccion}</TableCell>
                 <TableCell>{cliente.telefono}</TableCell>
-                <TableCell>{cliente.email}</TableCell>
+                <TableCell>{cliente.correo_electronico}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <EditClienteDialog cliente={cliente} onUpdate={onUpdateCliente} />
                   <DeleteClienteDialog clienteId={cliente.id} clienteNombre={cliente.nombre} onDelete={onDeleteCliente} />

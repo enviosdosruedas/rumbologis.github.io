@@ -43,7 +43,7 @@ export function RepartidoresTable({ repartidores, onUpdateRepartidor, onDeleteRe
               <TableHead>Nombre</TableHead>
               <TableHead>Identificación</TableHead>
               <TableHead>Teléfono</TableHead>
-              <TableHead>Vehículo</TableHead>
+              <TableHead>Vehículo Asignado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -53,7 +53,7 @@ export function RepartidoresTable({ repartidores, onUpdateRepartidor, onDeleteRe
                 <TableCell className="font-medium">{repartidor.nombre}</TableCell>
                 <TableCell>{repartidor.identificacion}</TableCell>
                 <TableCell>{repartidor.telefono}</TableCell>
-                <TableCell>{repartidor.vehiculo}</TableCell>
+                <TableCell>{repartidor.vehiculo_asignado}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <EditRepartidorDialog repartidor={repartidor} onUpdate={onUpdateRepartidor} />
                   <DeleteRepartidorDialog repartidorId={repartidor.id} repartidorNombre={repartidor.nombre} onDelete={onDeleteRepartidor} />

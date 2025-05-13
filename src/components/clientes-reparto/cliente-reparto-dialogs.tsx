@@ -53,7 +53,7 @@ export function CreateClienteRepartoDialog({ onCreate, clientes }: CreateCliente
 
 interface EditClienteRepartoDialogProps {
   clienteReparto: ClienteReparto;
-  onUpdate: (id: string, data: ClienteRepartoFormData) => void;
+  onUpdate: (id: number, data: ClienteRepartoFormData) => void;
   clientes: Cliente[];
 }
 
@@ -86,12 +86,12 @@ export function EditClienteRepartoDialog({ clienteReparto, onUpdate, clientes }:
 }
 
 interface DeleteClienteRepartoDialogProps {
-  clienteRepartoId: string;
-  clienteRepartoCodigo: string; // Or nombreReparto for better context
-  onDelete: (id: string) => void;
+  clienteRepartoId: number;
+  clienteRepartoNombre: string; 
+  onDelete: (id: number) => void;
 }
 
-export function DeleteClienteRepartoDialog({ clienteRepartoId, clienteRepartoCodigo, onDelete }: DeleteClienteRepartoDialogProps) {
+export function DeleteClienteRepartoDialog({ clienteRepartoId, clienteRepartoNombre, onDelete }: DeleteClienteRepartoDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const handleDelete = () => {
@@ -110,7 +110,7 @@ export function DeleteClienteRepartoDialog({ clienteRepartoId, clienteRepartoCod
         <DialogHeader>
           <DialogTitle>Eliminar Registro de Reparto</DialogTitle>
           <DialogDescription>
-            ¿Está seguro que desea eliminar el registro de reparto con código "{clienteRepartoCodigo}"? Esta acción no se puede deshacer.
+            ¿Está seguro que desea eliminar el registro de reparto "{clienteRepartoNombre}"? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

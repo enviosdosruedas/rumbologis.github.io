@@ -1,15 +1,13 @@
 import type { Cliente } from '@/types/cliente';
 
 export interface ClienteReparto {
-  id: number; // SERIAL PRIMARY KEY from database
-  codigo: string;
-  clienteId: string; // Foreign key to Cliente (UUID)
-  nombreReparto: string;
-  direccionReparto: string;
+  id: number; 
+  cliente_id: string; 
+  nombre_reparto: string;
+  direccion_reparto: string;
   tarifa: number;
-  rangoHorario: string;
-  created_at?: string; // Handled by Supabase
-  updated_at?: string; // Handled by Supabase
-  // Optional: for display purposes, can be populated by joining/mapping
+  rango_horario: string;
+  created_at?: string; 
+  updated_at?: string; 
   cliente?: Cliente; 
 }
