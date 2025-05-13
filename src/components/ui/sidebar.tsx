@@ -10,7 +10,12 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { 
+  Sheet, 
+  SheetContent,
+  SheetHeader as ShadcnSheetHeader, // Renamed import
+  SheetTitle as ShadcnSheetTitle    // Renamed import
+} from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -194,19 +199,28 @@ const Sidebar = React.forwardRef<
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
           <SheetContent
+            side={side}
+            className="flex flex-col w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
               } as React.CSSProperties
             }
-            side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            {/* Add accessible title for the sheet itself, ensuring it doesn't affect layout */}
+            <ShadcnSheetHeader className="h-0 p-0 overflow-hidden">
+              <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
+            </ShadcnSheetHeader>
+            
+            {/* The original children (SidebarHeader, SidebarContent from app-sidebar) */}
+            {/* Wrap children in a div that allows scrolling for the content and takes remaining space */}
+            <div className="flex-1 flex flex-col overflow-y-auto">
+                {children}
+            </div>
           </SheetContent>
         </Sheet>
       )
