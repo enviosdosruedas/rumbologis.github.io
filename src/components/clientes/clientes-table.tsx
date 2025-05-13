@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Cliente } from "@/types/cliente";
 import type { ClienteFormData } from "@/schemas/cliente-schema";
 import { EditClienteDialog, DeleteClienteDialog } from "./cliente-dialogs";
+import { EmptyStateCard } from "@/components/common/empty-state-card";
 
 interface ClientesTableProps {
   clientes: Cliente[];
@@ -22,14 +24,10 @@ interface ClientesTableProps {
 export function ClientesTable({ clientes, onUpdateCliente, onDeleteCliente }: ClientesTableProps) {
   if (clientes.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Clientes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No hay clientes registrados.</p>
-        </CardContent>
-      </Card>
+      <EmptyStateCard
+        title="Clientes"
+        message="No hay clientes registrados."
+      />
     );
   }
 

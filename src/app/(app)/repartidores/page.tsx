@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -7,7 +8,7 @@ import type { Repartidor } from "@/types/repartidor";
 import type { RepartidorFormData } from "@/schemas/repartidor-schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingScaffold } from "@/components/layout/loading-scaffold";
 
 export default function RepartidoresPage() {
   const [repartidores, setRepartidores] = useState<Repartidor[]>([]);
@@ -147,19 +148,11 @@ export default function RepartidoresPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold tracking-tight">Gestión de Repartidores</h2>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Repartidores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-center py-8">Cargando repartidores...</p>
-          </CardContent>
-        </Card>
-      </div>
+      <LoadingScaffold
+        pageTitle="Gestión de Repartidores"
+        cardTitle="Lista de Repartidores"
+        loadingText="Cargando repartidores..."
+      />
     );
   }
 

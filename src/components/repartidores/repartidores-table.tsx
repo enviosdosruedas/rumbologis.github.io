@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Repartidor } from "@/types/repartidor";
 import type { RepartidorFormData } from "@/schemas/repartidor-schema";
 import { EditRepartidorDialog, DeleteRepartidorDialog } from "./repartidor-dialogs";
+import { EmptyStateCard } from "@/components/common/empty-state-card";
 
 interface RepartidoresTableProps {
   repartidores: Repartidor[];
@@ -22,14 +24,10 @@ interface RepartidoresTableProps {
 export function RepartidoresTable({ repartidores, onUpdateRepartidor, onDeleteRepartidor }: RepartidoresTableProps) {
   if (repartidores.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Repartidores</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No hay repartidores registrados.</p>
-        </CardContent>
-      </Card>
+      <EmptyStateCard
+        title="Repartidores"
+        message="No hay repartidores registrados."
+      />
     );
   }
   

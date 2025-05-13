@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -7,9 +8,7 @@ import type { Cliente } from "@/types/cliente";
 import type { ClienteFormData } from "@/schemas/cliente-schema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { LoadingScaffold } from "@/components/layout/loading-scaffold";
 
 
 export default function ClientesPage() {
@@ -117,7 +116,6 @@ export default function ClientesPage() {
       return;
     }
     
-    // Find client name for toast message before potential deletion from local state
     const clienteAEliminar = clientes.find(c => c.id === id);
     
     const { error } = await supabase
@@ -140,7 +138,6 @@ export default function ClientesPage() {
           variant: "destructive",
           });
       } else {
-         // Fallback if client was not found in state before deletion (e.g. rapid operations)
          toast({
           title: "Cliente Eliminado",
           description: `El cliente con ID ${id} ha sido eliminado.`,
@@ -152,20 +149,11 @@ export default function ClientesPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold tracking-tight">Gestión de Clientes</h2>
-           {/* Create button could be disabled or not rendered here */}
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Clientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-center py-8">Cargando clientes...</p>
-          </CardContent>
-        </Card>
-      </div>
+      <LoadingScaffold
+        pageTitle="Gestión de Clientes"
+        cardTitle="Lista de Clientes"
+        loadingText="Cargando clientes..."
+      />
     );
   }
 
