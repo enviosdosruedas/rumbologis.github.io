@@ -32,7 +32,7 @@ export function RepartoDetails({ reparto, isOpen, onOpenChange }: RepartoDetails
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-2">
             <span className="font-semibold">ID Reparto:</span>
-            <span>{reparto.id.substring(0,8)}...</span>
+            <span>{String(reparto.id).substring(0,8)}...</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <span className="font-semibold">Fecha:</span>
@@ -85,3 +85,4 @@ export function RepartoDetails({ reparto, isOpen, onOpenChange }: RepartoDetails
     </Dialog>
   );
 }
+
