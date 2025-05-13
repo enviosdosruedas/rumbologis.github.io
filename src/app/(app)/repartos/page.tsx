@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabaseClient"; // Assuming supabase client is configured
+import { supabase } from "@/lib/supabaseClient";
 import { LoadingScaffold } from "@/components/layout/loading-scaffold";
 import { CrudPageHeader } from "@/components/common/crud-page-header";
 
-import type { Reparto, RepartoBase } from "@/types/reparto";
+import type { Reparto } from "@/types/reparto";
 import type { RepartoFormData } from "@/schemas/reparto-schema";
 import type { Repartidor } from "@/types/repartidor";
 import type { Cliente } from "@/types/cliente";
@@ -15,7 +15,7 @@ import type { ClienteReparto } from "@/types/cliente-reparto";
 
 import { RepartoTable } from "@/components/repartos/reparto-table";
 import { CreateRepartoDialog, EditRepartoDialog, DeleteRepartoDialog } from "@/components/repartos/reparto-dialogs";
-import { RepartoDetails } from "@/components/repartos/reparto-details";
+import { RepartoDetails } from "@/components/repartos/reparto-details"; // Keep if used
 
 export default function RepartosPage() {
   const [repartos, setRepartos] = useState<Reparto[]>([]);
@@ -33,64 +33,56 @@ export default function RepartosPage() {
 
   // --- Data Fetching ---
   const fetchRepartidores = useCallback(async () => {
-    // Placeholder: Replace with actual Supabase call
-    // const { data, error } = await supabase.from("repartidores").select("*");
-    // if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    // else setRepartidores(data || []);
-    console.log("Fetching repartidores...");
-    setRepartidores([
-        { id: "uuid-repartidor-1", nombre: "Juan Pérez", identificacion: "123", telefono: "555", vehiculo_asignado: "Moto" },
-        { id: "uuid-repartidor-2", nombre: "Ana Gómez", identificacion: "456", telefono: "666", vehiculo_asignado: "Auto" },
-    ]);
+    const { data, error } = await supabase.from("repartidores").select("id, nombre").order("nombre");
+    if (error) toast({ title: "Error cargando repartidores", description: error.message, variant: "destructive" });
+    else setRepartidores(data || []);
   }, [toast]);
 
   const fetchClientes = useCallback(async () => {
-    // Placeholder: Replace with actual Supabase call
-    // const { data, error } = await supabase.from("clientes").select("*");
-    // if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    // else setClientes(data || []);
-    console.log("Fetching clientes...");
-     setClientes([
-        { id: "uuid-cliente-1", nombre: "Empresa Alpha", direccion: "Calle Alpha 1", telefono: "111", correo_electronico: "a@a.com"},
-        { id: "uuid-cliente-2", nombre: "Negocio Beta", direccion: "Calle Beta 2", telefono: "222", correo_electronico: "b@b.com"},
-    ]);
+    const { data, error } = await supabase.from("clientes").select("id, nombre").order("nombre");
+    if (error) toast({ title: "Error cargando clientes", description: error.message, variant: "destructive" });
+    else setClientes(data || []);
   }, [toast]);
 
   const fetchClientesRepartoList = useCallback(async () => {
-    // Placeholder: Replace with actual Supabase call
-    // const { data, error } = await supabase.from("clientes_reparto").select("*, clientes(id, nombre)");
-    // if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    // else setClientesRepartoList(data || []);
-     console.log("Fetching clientes reparto list...");
-     setClientesRepartoList([
-        { id: 1, cliente_id: "uuid-cliente-1", nombre_reparto: "Sucursal Alpha Centro", direccion_reparto: "Centro 1", tarifa: 10, rango_horario: "9-12" },
-        { id: 2, cliente_id: "uuid-cliente-1", nombre_reparto: "Sucursal Alpha Norte", direccion_reparto: "Norte 1", tarifa: 12, rango_horario: "14-17" },
-        { id: 3, cliente_id: "uuid-cliente-2", nombre_reparto: "Deposito Beta", direccion_reparto: "Industrial 5", tarifa: 15, rango_horario: "10-18" },
-     ]);
+    // Fetches all clientes_reparto. Filtering will happen in the form based on selected cliente_id.
+    const { data, error } = await supabase.from("clientes_reparto").select("*").order("nombre_reparto");
+    if (error) toast({ title: "Error cargando lista de clientes de reparto", description: error.message, variant: "destructive" });
+    else setClientesRepartoList(data || []);
   }, [toast]);
 
   const fetchRepartos = useCallback(async () => {
     setIsLoading(true);
-    // Placeholder: Replace with actual Supabase call
-    // This will involve fetching from 'repartos' table and potentially a join table for 'clientes_reparto_asignados'
-    // For now, using mock data.
-    console.log("Fetching repartos...");
-    const mockRepartos: Reparto[] = [
-      { 
-        id: "uuid-reparto-1", 
-        fecha_reparto: new Date().toISOString(), 
-        repartidor_id: "uuid-repartidor-1",
-        cliente_id: "uuid-cliente-1",
-        observaciones: "Primer reparto de prueba",
-        repartidor: { nombre: "Juan Pérez" },
-        cliente: { nombre: "Empresa Alpha" },
-        clientes_reparto_asignados: [
-            { id: 1, cliente_id: "uuid-cliente-1", nombre_reparto: "Sucursal Alpha Centro", direccion_reparto: "Centro 1", tarifa: 10, rango_horario: "9-12" }
-        ],
-        cantidad_clientes_reparto: 1,
-      },
-    ];
-    setRepartos(mockRepartos);
+    const { data, error } = await supabase
+      .from("repartos")
+      .select(`
+        id,
+        fecha_reparto,
+        observaciones,
+        repartidor_id,
+        repartidores (id, nombre),
+        cliente_id,
+        clientes (id, nombre),
+        reparto_cliente_reparto ( cliente_reparto_id )
+      `)
+      .order("fecha_reparto", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (error) {
+      toast({ title: "Error cargando repartos", description: error.message, variant: "destructive" });
+      setRepartos([]);
+    } else {
+      const formattedRepartos = data.map(reparto => ({
+        ...reparto,
+        repartidor: reparto.repartidores as Repartidor, // Cast to Repartidor
+        cliente: reparto.clientes as Cliente, // Cast to Cliente
+        // @ts-ignore Supabase specific array structure for joined table
+        cantidad_clientes_reparto: reparto.reparto_cliente_reparto?.length || 0,
+        // @ts-ignore
+        clientes_reparto_ids: reparto.reparto_cliente_reparto?.map(link => link.cliente_reparto_id) || [],
+      }));
+      setRepartos(formattedRepartos as Reparto[]);
+    }
     setIsLoading(false);
   }, [toast]);
 
@@ -106,37 +98,141 @@ export default function RepartosPage() {
 
   // --- CRUD Handlers ---
   const handleCreateReparto = async (formData: RepartoFormData) => {
-    console.log("Creating reparto:", formData);
-    // Placeholder: Add Supabase insert logic for 'repartos' and the join table
-    // const newRepartoBase: Omit<RepartoBase, 'id' | 'created_at' | 'updated_at'> = { ... }
-    // const { data: newReparto, error } = await supabase.from('repartos').insert(newRepartoBase).select().single();
-    // Then insert into join table for clientes_reparto_seleccionados_ids
+    const { clientes_reparto_seleccionados_ids, ...repartoData } = formData;
+
+    // 1. Insert into 'repartos' table
+    const { data: newReparto, error: repartoError } = await supabase
+      .from("repartos")
+      .insert([repartoData])
+      .select()
+      .single();
+
+    if (repartoError) {
+      toast({ title: "Error creando reparto", description: repartoError.message, variant: "destructive" });
+      return;
+    }
+
+    if (newReparto && clientes_reparto_seleccionados_ids && clientes_reparto_seleccionados_ids.length > 0) {
+      const linksToInsert = clientes_reparto_seleccionados_ids.map(cliente_reparto_id => ({
+        reparto_id: newReparto.id,
+        cliente_reparto_id: cliente_reparto_id,
+      }));
+
+      const { error: linkError } = await supabase
+        .from("reparto_cliente_reparto")
+        .insert(linksToInsert);
+
+      if (linkError) {
+        toast({ title: "Error asignando clientes de reparto", description: linkError.message, variant: "destructive" });
+        // Optionally, delete the created reparto if linking fails
+        await supabase.from("repartos").delete().eq("id", newReparto.id);
+        return;
+      }
+    }
     
-    toast({ title: "Éxito", description: "Reparto creado (simulado)." });
+    toast({ title: "Reparto Creado", description: "El reparto ha sido creado exitosamente.", className: "bg-accent text-accent-foreground" });
     fetchRepartos(); // Refresh list
   };
 
-  const handleUpdateReparto = async (id: string, formData: RepartoFormData) => {
-    console.log("Updating reparto:", id, formData);
-    // Placeholder: Add Supabase update logic
-    toast({ title: "Éxito", description: "Reparto actualizado (simulado)." });
+  const handleUpdateReparto = async (id: number, formData: RepartoFormData) => {
+    const { clientes_reparto_seleccionados_ids, ...repartoData } = formData;
+
+    // 1. Update 'repartos' table
+    const { error: repartoError } = await supabase
+      .from("repartos")
+      .update(repartoData)
+      .eq("id", id);
+
+    if (repartoError) {
+      toast({ title: "Error actualizando reparto", description: repartoError.message, variant: "destructive" });
+      return;
+    }
+
+    // 2. Update 'reparto_cliente_reparto' links
+    //    a. Delete existing links for this reparto
+    const { error: deleteError } = await supabase
+      .from("reparto_cliente_reparto")
+      .delete()
+      .eq("reparto_id", id);
+
+    if (deleteError) {
+      toast({ title: "Error actualizando asignaciones (paso 1)", description: deleteError.message, variant: "destructive" });
+      // Data might be in an inconsistent state here.
+      return;
+    }
+
+    //    b. Insert new links if any
+    if (clientes_reparto_seleccionados_ids && clientes_reparto_seleccionados_ids.length > 0) {
+      const linksToInsert = clientes_reparto_seleccionados_ids.map(cliente_reparto_id => ({
+        reparto_id: id,
+        cliente_reparto_id: cliente_reparto_id,
+      }));
+
+      const { error: linkError } = await supabase
+        .from("reparto_cliente_reparto")
+        .insert(linksToInsert);
+
+      if (linkError) {
+        toast({ title: "Error actualizando asignaciones (paso 2)", description: linkError.message, variant: "destructive" });
+        return;
+      }
+    }
+    
+    toast({ title: "Reparto Actualizado", description: "El reparto ha sido actualizado exitosamente.", className: "bg-accent text-accent-foreground"});
     fetchRepartos(); // Refresh list
     setSelectedReparto(null);
     setIsEditModalOpen(false);
   };
 
-  const handleDeleteReparto = async (id: string) => {
-    console.log("Deleting reparto:", id);
-    // Placeholder: Add Supabase delete logic
-    toast({ title: "Éxito", description: "Reparto eliminado (simulado)." });
+  const handleDeleteReparto = async (id: number) => {
+    // 1. Delete from 'reparto_cliente_reparto' (cascade might handle this if set up in DB)
+    const { error: linkError } = await supabase
+      .from("reparto_cliente_reparto")
+      .delete()
+      .eq("reparto_id", id);
+
+    if (linkError) {
+      toast({ title: "Error eliminando asignaciones", description: linkError.message, variant: "destructive" });
+      return;
+    }
+
+    // 2. Delete from 'repartos'
+    const { error: repartoError } = await supabase
+      .from("repartos")
+      .delete()
+      .eq("id", id);
+
+    if (repartoError) {
+      toast({ title: "Error eliminando reparto", description: repartoError.message, variant: "destructive" });
+      return;
+    }
+    
+    toast({ title: "Reparto Eliminado", description: "El reparto ha sido eliminado.", variant: "destructive" });
     fetchRepartos(); // Refresh list
     setSelectedReparto(null);
     setIsDeleteModalOpen(false);
   };
   
-  // --- Modal Triggers ---
-  const openEditModal = (reparto: Reparto) => {
-    setSelectedReparto(reparto);
+  const openEditModal = async (reparto: Reparto) => {
+    // Fetch full details for editing, especially clientes_reparto_asignados
+    const { data: assignedLinks, error } = await supabase
+        .from('reparto_cliente_reparto')
+        .select('cliente_reparto_id, clientes_reparto(*)')
+        .eq('reparto_id', reparto.id);
+
+    if (error) {
+        toast({ title: "Error cargando detalles para editar", description: error.message, variant: "destructive" });
+        return;
+    }
+    
+    const fullRepartoData: Reparto = {
+        ...reparto,
+        // @ts-ignore
+        clientes_reparto_asignados: assignedLinks?.map(link => link.clientes_reparto as ClienteReparto) || [],
+        // @ts-ignore
+        clientes_reparto_ids: assignedLinks?.map(link => link.cliente_reparto_id) || [],
+    };
+    setSelectedReparto(fullRepartoData);
     setIsEditModalOpen(true);
   };
 
@@ -145,9 +241,23 @@ export default function RepartosPage() {
     setIsDeleteModalOpen(true);
   };
   
-  const openDetailsModal = (reparto: Reparto) => {
-    // Potentially fetch full details if not already loaded
-    setSelectedReparto(reparto);
+  const openDetailsModal = async (reparto: Reparto) => {
+     const { data: assignedLinks, error } = await supabase
+        .from('reparto_cliente_reparto')
+        .select('cliente_reparto_id, clientes_reparto(*)') // fetch the id and the full cliente_reparto record
+        .eq('reparto_id', reparto.id);
+
+    if (error) {
+        toast({ title: "Error cargando detalles", description: error.message, variant: "destructive" });
+        setSelectedReparto(reparto); // Show with potentially incomplete data
+    } else {
+       const fullRepartoData: Reparto = {
+        ...reparto,
+         // @ts-ignore
+        clientes_reparto_asignados: assignedLinks?.map(link => link.clientes_reparto as ClienteReparto) || [],
+       };
+       setSelectedReparto(fullRepartoData);
+    }
     setIsDetailsModalOpen(true);
   };
 
@@ -178,10 +288,6 @@ export default function RepartosPage() {
       <RepartoTable
         repartos={repartos}
         onEditReparto={openEditModal}
-        // onDeleteReparto={(id) => { // Simplified for direct call, or use openDeleteModal
-        //   const repartoToDelete = repartos.find(r => r.id === id);
-        //   if (repartoToDelete) openDeleteModal(repartoToDelete);
-        // }}
         onDeleteReparto={(repartoId) => {
             const repartoFound = repartos.find(r => r.id === repartoId);
             if(repartoFound) openDeleteModal(repartoFound);
@@ -193,7 +299,7 @@ export default function RepartosPage() {
       {selectedReparto && isEditModalOpen && (
         <EditRepartoDialog
           reparto={selectedReparto}
-          onUpdate={handleUpdateReparto}
+          onUpdate={(id, data) => handleUpdateReparto(Number(id), data)} // Ensure ID is number
           repartidores={repartidores}
           clientes={clientes}
           clientesRepartoList={clientesRepartoList}
@@ -204,9 +310,9 @@ export default function RepartosPage() {
       
       {selectedReparto && isDeleteModalOpen && (
          <DeleteRepartoDialog
-            repartoId={selectedReparto.id}
-            repartoFecha={selectedReparto.fecha_reparto.toString()} // Pass as string
-            onDelete={handleDeleteReparto}
+            repartoId={selectedReparto.id} // id is number
+            repartoFecha={selectedReparto.fecha_reparto.toString()}
+            onDelete={(id) => handleDeleteReparto(Number(id))} // Ensure ID is number
             isOpen={isDeleteModalOpen}
             onOpenChange={setIsDeleteModalOpen}
         />
@@ -222,3 +328,4 @@ export default function RepartosPage() {
     </div>
   );
 }
+

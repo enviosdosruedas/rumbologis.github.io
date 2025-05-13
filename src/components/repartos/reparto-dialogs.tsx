@@ -20,6 +20,8 @@ import type { Repartidor } from "@/types/repartidor";
 import type { Cliente } from "@/types/cliente";
 import type { ClienteReparto } from "@/types/cliente-reparto";
 import { PlusCircle, FilePenLine, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface CreateRepartoDialogProps {
   onCreate: (data: RepartoFormData) => void;
@@ -72,8 +74,8 @@ export function CreateRepartoDialog({
 }
 
 interface EditRepartoDialogProps {
-  reparto: Reparto; // Full Reparto object for default values
-  onUpdate: (id: string, data: RepartoFormData) => void;
+  reparto: Reparto; 
+  onUpdate: (id: number, data: RepartoFormData) => void;
   repartidores: Repartidor[];
   clientes: Cliente[];
   clientesRepartoList: ClienteReparto[];
@@ -92,25 +94,21 @@ export function EditRepartoDialog({
 }: EditRepartoDialogProps) {
   
   const handleSubmit = (data: RepartoFormData) => {
-    onUpdate(reparto.id, data);
+    onUpdate(reparto.id, data); // reparto.id is number
     onOpenChange(false);
   };
 
-  // Prepare defaultValues for the form, ensuring fecha_reparto is a Date object
-  // And clientes_reparto_seleccionados_ids is properly mapped if needed
   const defaultValues: Partial<RepartoFormData & { fecha_reparto?: string | Date }> = {
-    ...reparto,
-    fecha_reparto: new Date(reparto.fecha_reparto), // Ensure it's a Date object
-     // Assuming 'reparto.clientes_reparto_asignados' contains the full objects
-     // and we need to extract their IDs for the form's checklist.
-     // If Reparto type already has clientes_reparto_ids, use that directly.
-    clientes_reparto_seleccionados_ids: reparto.clientes_reparto_asignados?.map(cr => cr.id) || [],
+    ...reparto, // Spread all properties from reparto
+    fecha_reparto: new Date(reparto.fecha_reparto),
+    // Use pre-fetched clientes_reparto_ids if available on the reparto object
+    // This assumes the parent component (RepartosPage) fetches and attaches `clientes_reparto_ids` to the `selectedReparto` object
+    clientes_reparto_seleccionados_ids: reparto.clientes_reparto_ids || reparto.clientes_reparto_asignados?.map(cr => cr.id) || [],
   };
 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      {/* Trigger is usually handled by the parent component for edit dialogs */}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Editar Reparto</DialogTitle>
@@ -134,9 +132,9 @@ export function EditRepartoDialog({
 
 
 interface DeleteRepartoDialogProps {
-  repartoId: string;
-  repartoFecha: string; // For display in confirmation
-  onDelete: (id: string) => void;
+  repartoId: number;
+  repartoFecha: string; 
+  onDelete: (id: number) => void;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -150,12 +148,11 @@ export function DeleteRepartoDialog({ repartoId, repartoFecha, onDelete, isOpen,
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      {/* Trigger is usually handled by the parent component for delete dialogs */}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Eliminar Reparto</DialogTitle>
           <DialogDescription>
-            ¿Está seguro que desea eliminar el reparto del día {format(new Date(repartoFecha), "PPP", {locale: es})}? Esta acción no se puede deshacer.
+            ¿Está seguro que desea eliminar el reparto del día {format(new Date(repartoFecha), "PPP", {locale: es})} (ID: {repartoId})? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -170,3 +167,4 @@ export function DeleteRepartoDialog({ repartoId, repartoFecha, onDelete, isOpen,
     </Dialog>
   );
 }
+
