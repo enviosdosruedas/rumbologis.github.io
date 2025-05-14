@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const publicPaths = ['/login', '/test-login'];
-  const adminPaths = ['/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
+  const adminPaths = ['/','/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
   const repartidorPaths = ['/dashboardrepartomobile'];
 
   if (!userData) {
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   // User is authenticated
   if (pathname === '/login' || pathname === '/test-login') {
     if (userData.rol === 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     } else if (userData.rol === 'repartidor') {
       return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
     }
@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
 
   if (userData.rol === 'admin') {
     if (repartidorPaths.includes(pathname)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
   } else if (userData.rol === 'repartidor') {
     if (adminPaths.includes(pathname)) {
