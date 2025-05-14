@@ -3,6 +3,8 @@ import type { Repartidor } from './repartidor';
 import type { Cliente } from './cliente';
 import type { ClienteReparto } from './cliente-reparto';
 
+export type RepartoEstado = 'Asignado' | 'En Curso' | 'Completo';
+
 // Interface for data as stored in the DB or initially fetched
 export interface RepartoBase {
   id: number; // SERIAL PRIMARY KEY, so it's a number
@@ -10,6 +12,7 @@ export interface RepartoBase {
   repartidor_id: string; // UUID of the repartidor
   cliente_id: string; // UUID of the cliente
   observaciones?: string | null; // Allow null for text fields from DB
+  estado: RepartoEstado; // Estado del reparto
   created_at?: string;
   updated_at?: string;
 }
@@ -36,4 +39,3 @@ export interface RepartoClienteRepartoLink {
   reparto_id: number; // FK to repartos.id
   cliente_reparto_id: number; // FK to clientes_reparto.id
 }
-

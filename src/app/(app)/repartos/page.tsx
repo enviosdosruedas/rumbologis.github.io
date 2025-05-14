@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { LoadingScaffold } from "@/components/layout/loading-scaffold";
 import { CrudPageHeader } from "@/components/common/crud-page-header";
 
-import type { Reparto } from "@/types/reparto";
+import type { Reparto, RepartoEstado } from "@/types/reparto";
 import type { RepartoFormData } from "@/schemas/reparto-schema";
 import type { Repartidor } from "@/types/repartidor";
 import type { Cliente } from "@/types/cliente";
@@ -15,7 +15,7 @@ import type { ClienteReparto } from "@/types/cliente-reparto";
 
 import { RepartoTable } from "@/components/repartos/reparto-table";
 import { CreateRepartoDialog, EditRepartoDialog, DeleteRepartoDialog } from "@/components/repartos/reparto-dialogs";
-import { RepartoDetails } from "@/components/repartos/reparto-details"; // Keep if used
+import { RepartoDetails } from "@/components/repartos/reparto-details"; 
 
 export default function RepartosPage() {
   const [repartos, setRepartos] = useState<Reparto[]>([]);
@@ -45,7 +45,6 @@ export default function RepartosPage() {
   }, [toast]);
 
   const fetchClientesRepartoList = useCallback(async () => {
-    // Fetches all clientes_reparto. Filtering will happen in the form based on selected cliente_id.
     const { data, error } = await supabase.from("clientes_reparto").select("*").order("nombre_reparto");
     if (error) toast({ title: "Error cargando lista de clientes de reparto", description: error.message, variant: "destructive" });
     else setClientesRepartoList(data || []);
@@ -59,6 +58,7 @@ export default function RepartosPage() {
         id,
         fecha_reparto,
         observaciones,
+        estado,
         repartidor_id,
         repartidores (id, nombre),
         cliente_id,
@@ -74,12 +74,13 @@ export default function RepartosPage() {
     } else {
       const formattedRepartos = data.map(reparto => ({
         ...reparto,
-        repartidor: reparto.repartidores as Repartidor, // Cast to Repartidor
-        cliente: reparto.clientes as Cliente, // Cast to Cliente
+        repartidor: reparto.repartidores as Repartidor, 
+        cliente: reparto.clientes as Cliente, 
         // @ts-ignore Supabase specific array structure for joined table
         cantidad_clientes_reparto: reparto.reparto_cliente_reparto?.length || 0,
         // @ts-ignore
         clientes_reparto_ids: reparto.reparto_cliente_reparto?.map(link => link.cliente_reparto_id) || [],
+        estado: reparto.estado as RepartoEstado || 'Asignado', // Ensure estado is correctly typed
       }));
       setRepartos(formattedRepartos as Reparto[]);
     }
@@ -98,12 +99,17 @@ export default function RepartosPage() {
 
   // --- CRUD Handlers ---
   const handleCreateReparto = async (formData: RepartoFormData) => {
-    const { clientes_reparto_seleccionados_ids, ...repartoData } = formData;
+    const { clientes_reparto_seleccionados_ids, ...repartoDataFromForm } = formData;
+
+    const repartoToInsert = {
+      ...repartoDataFromForm,
+      estado: 'Asignado' as RepartoEstado, // Set initial state
+    };
 
     // 1. Insert into 'repartos' table
     const { data: newReparto, error: repartoError } = await supabase
       .from("repartos")
-      .insert([repartoData])
+      .insert([repartoToInsert])
       .select()
       .single();
 
@@ -124,23 +130,23 @@ export default function RepartosPage() {
 
       if (linkError) {
         toast({ title: "Error asignando clientes de reparto", description: linkError.message, variant: "destructive" });
-        // Optionally, delete the created reparto if linking fails
         await supabase.from("repartos").delete().eq("id", newReparto.id);
         return;
       }
     }
     
     toast({ title: "Reparto Creado", description: "El reparto ha sido creado exitosamente.", className: "bg-accent text-accent-foreground" });
-    fetchRepartos(); // Refresh list
+    fetchRepartos(); 
   };
 
   const handleUpdateReparto = async (id: number, formData: RepartoFormData) => {
     const { clientes_reparto_seleccionados_ids, ...repartoData } = formData;
+    // Note: 'estado' is not part of RepartoFormData by default, it's handled by handleUpdateRepartoEstado
 
     // 1. Update 'repartos' table
     const { error: repartoError } = await supabase
       .from("repartos")
-      .update(repartoData)
+      .update(repartoData) // This will update fields present in repartoData (fecha, repartidor_id, cliente_id, observaciones)
       .eq("id", id);
 
     if (repartoError) {
@@ -149,7 +155,6 @@ export default function RepartosPage() {
     }
 
     // 2. Update 'reparto_cliente_reparto' links
-    //    a. Delete existing links for this reparto
     const { error: deleteError } = await supabase
       .from("reparto_cliente_reparto")
       .delete()
@@ -157,11 +162,9 @@ export default function RepartosPage() {
 
     if (deleteError) {
       toast({ title: "Error actualizando asignaciones (paso 1)", description: deleteError.message, variant: "destructive" });
-      // Data might be in an inconsistent state here.
       return;
     }
 
-    //    b. Insert new links if any
     if (clientes_reparto_seleccionados_ids && clientes_reparto_seleccionados_ids.length > 0) {
       const linksToInsert = clientes_reparto_seleccionados_ids.map(cliente_reparto_id => ({
         reparto_id: id,
@@ -179,13 +182,30 @@ export default function RepartosPage() {
     }
     
     toast({ title: "Reparto Actualizado", description: "El reparto ha sido actualizado exitosamente.", className: "bg-accent text-accent-foreground"});
-    fetchRepartos(); // Refresh list
+    fetchRepartos(); 
     setSelectedReparto(null);
     setIsEditModalOpen(false);
   };
 
+  const handleUpdateRepartoEstado = async (repartoId: number, nuevoEstado: RepartoEstado) => {
+    const { error } = await supabase
+      .from("repartos")
+      .update({ estado: nuevoEstado })
+      .eq("id", repartoId);
+
+    if (error) {
+      toast({ title: "Error Actualizando Estado", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Estado Actualizado",
+        description: `El estado del reparto ha sido actualizado a "${nuevoEstado}".`,
+        className: "bg-accent text-accent-foreground"
+      });
+      fetchRepartos(); // Refresh list to show the new state
+    }
+  };
+
   const handleDeleteReparto = async (id: number) => {
-    // 1. Delete from 'reparto_cliente_reparto' (cascade might handle this if set up in DB)
     const { error: linkError } = await supabase
       .from("reparto_cliente_reparto")
       .delete()
@@ -196,7 +216,6 @@ export default function RepartosPage() {
       return;
     }
 
-    // 2. Delete from 'repartos'
     const { error: repartoError } = await supabase
       .from("repartos")
       .delete()
@@ -208,13 +227,12 @@ export default function RepartosPage() {
     }
     
     toast({ title: "Reparto Eliminado", description: "El reparto ha sido eliminado.", variant: "destructive" });
-    fetchRepartos(); // Refresh list
+    fetchRepartos(); 
     setSelectedReparto(null);
     setIsDeleteModalOpen(false);
   };
   
   const openEditModal = async (reparto: Reparto) => {
-    // Fetch full details for editing, especially clientes_reparto_asignados
     const { data: assignedLinks, error } = await supabase
         .from('reparto_cliente_reparto')
         .select('cliente_reparto_id, clientes_reparto(*)')
@@ -244,12 +262,12 @@ export default function RepartosPage() {
   const openDetailsModal = async (reparto: Reparto) => {
      const { data: assignedLinks, error } = await supabase
         .from('reparto_cliente_reparto')
-        .select('cliente_reparto_id, clientes_reparto(*)') // fetch the id and the full cliente_reparto record
+        .select('cliente_reparto_id, clientes_reparto(*)') 
         .eq('reparto_id', reparto.id);
 
     if (error) {
         toast({ title: "Error cargando detalles", description: error.message, variant: "destructive" });
-        setSelectedReparto(reparto); // Show with potentially incomplete data
+        setSelectedReparto(reparto); 
     } else {
        const fullRepartoData: Reparto = {
         ...reparto,
@@ -294,12 +312,13 @@ export default function RepartosPage() {
             else toast({title: "Error", description: "Reparto no encontrado para eliminar.", variant: "destructive"});
         }}
         onViewDetails={openDetailsModal}
+        onUpdateEstado={handleUpdateRepartoEstado}
       />
 
       {selectedReparto && isEditModalOpen && (
         <EditRepartoDialog
           reparto={selectedReparto}
-          onUpdate={(id, data) => handleUpdateReparto(Number(id), data)} // Ensure ID is number
+          onUpdate={(id, data) => handleUpdateReparto(Number(id), data)} 
           repartidores={repartidores}
           clientes={clientes}
           clientesRepartoList={clientesRepartoList}
@@ -310,9 +329,9 @@ export default function RepartosPage() {
       
       {selectedReparto && isDeleteModalOpen && (
          <DeleteRepartoDialog
-            repartoId={selectedReparto.id} // id is number
+            repartoId={selectedReparto.id} 
             repartoFecha={selectedReparto.fecha_reparto.toString()}
-            onDelete={(id) => handleDeleteReparto(Number(id))} // Ensure ID is number
+            onDelete={(id) => handleDeleteReparto(Number(id))} 
             isOpen={isDeleteModalOpen}
             onOpenChange={setIsDeleteModalOpen}
         />
@@ -328,4 +347,3 @@ export default function RepartosPage() {
     </div>
   );
 }
-

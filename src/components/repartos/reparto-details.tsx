@@ -32,11 +32,15 @@ export function RepartoDetails({ reparto, isOpen, onOpenChange }: RepartoDetails
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-2">
             <span className="font-semibold">ID Reparto:</span>
-            <span>{String(reparto.id).substring(0,8)}...</span>
+            <span>{String(reparto.id)}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <span className="font-semibold">Fecha:</span>
             <span>{format(new Date(reparto.fecha_reparto), "PPP", { locale: es })}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <span className="font-semibold">Estado:</span>
+            <span>{reparto.estado}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <span className="font-semibold">Repartidor:</span>
@@ -85,4 +89,3 @@ export function RepartoDetails({ reparto, isOpen, onOpenChange }: RepartoDetails
     </Dialog>
   );
 }
-
