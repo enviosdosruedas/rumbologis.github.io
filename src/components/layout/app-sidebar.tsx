@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ship, Users2, Truck, ClipboardList, Route } from "lucide-react"; // Added Route for Repartos
+import { Ship, Users2, Truck, ClipboardList, Route, LayoutDashboard } from "lucide-react"; // Added Route for Repartos & LayoutDashboard
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
@@ -18,48 +18,35 @@ import {
   useSidebar, 
 } from "@/components/ui/sidebar";
 import { 
-  SheetHeader as ShadcnSheetHeader, // Renamed ShadcnSheetHeader
-  SheetTitle as ShadcnSheetTitle    // Renamed ShadcnSheetTitle
-} from "@/components/ui/sheet"; // Import from actual sheet component
-import { Button } from "@/components/ui/button";
+  SheetHeader as ShadcnSheetHeader, 
+  SheetTitle as ShadcnSheetTitle    
+} from "@/components/ui/sheet"; 
+// Button import might not be directly used here anymore, but keeping for safety unless cleanup is requested.
+// import { Button } from "@/components/ui/button"; 
 
 const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }, // New item for Dashboard
   { href: "/clientes", label: "Clientes", icon: Users2 },
   { href: "/repartidores", label: "Repartidores", icon: Truck },
   { href: "/clientes-reparto", label: "Clientes Reparto", icon: ClipboardList },
-  { href: "/repartos", label: "Repartos", icon: Route }, // New item for Repartos
+  { href: "/repartos", label: "Repartos", icon: Route }, 
 ];
 
-// This component will render the SheetHeader and SheetTitle only on mobile
-function MobileAccessibleSheetHeader() {
+// Internal component to consume SidebarContext
+function AppSidebarInternal({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { isMobile } = useSidebar();
 
-  if (!isMobile) {
-    return null;
-  }
-
   return (
-    // Use ShadcnSheetHeader and ShadcnSheetTitle here
-    <ShadcnSheetHeader className="p-0 border-0 h-auto"> 
-      <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
-    </ShadcnSheetHeader>
-  );
-}
-
-export function AppSidebar({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <SidebarProvider defaultOpen>
+    <>
       <Sidebar collapsible="icon">
-        {/* The custom sidebar component itself might manage its own SheetHeader for mobile if it's part of its SheetContent */}
-        {/* If the Sidebar component itself renders a Sheet on mobile, the SheetHeader should be inside that SheetContent. */}
-        {/* For this example, we assume the Sidebar component's mobile view might need this. */}
-        {/* It's better if the Sidebar component itself handles its mobile Sheet's title for accessibility. */}
-        {/* Let's remove MobileAccessibleSheetHeader from here if Sidebar component handles it. */}
-        {/* The custom sidebar component will handle its own title for mobile if it uses a Sheet */}
+         {isMobile && (
+          <ShadcnSheetHeader className="p-0 border-0 h-auto">
+            <ShadcnSheetTitle className="sr-only">Navegación Principal</ShadcnSheetTitle>
+          </ShadcnSheetHeader>
+        )}
         <CustomSidebarHeader className="p-4">
-          <Link href="/clientes" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Ship className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-semibold text-foreground group-data-[collapsible=icon]:hidden">
               Rumbo Envíos
@@ -72,7 +59,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.startsWith(item.href)}
+                  isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                   tooltip={{ children: item.label, className: "group-data-[collapsible=icon]:block hidden" }}
                 >
                   <Link href={item.href}>
@@ -98,6 +85,15 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
          {children}
         </main>
       </SidebarInset>
+    </>
+  );
+}
+
+export function AppSidebar({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider defaultOpen>
+      <AppSidebarInternal>{children}</AppSidebarInternal>
     </SidebarProvider>
   );
 }
+
