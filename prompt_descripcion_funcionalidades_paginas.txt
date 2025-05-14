@@ -1,0 +1,38 @@
+Por favor, describe en lenguaje natural qué hace cada una de las siguientes páginas de la aplicación "Rumbo Envíos" y cuál es su lógica principal de funcionamiento:
+
+1.  **Página de Gestión de Clientes (`/clientes`):**
+    *   ¿Cuál es el propósito principal de esta página?
+    *   ¿Qué tipo de información se gestiona aquí (ej: datos de empresas cliente)?
+    *   ¿Qué operaciones CRUD (Crear, Leer, Actualizar, Eliminar) se pueden realizar sobre los clientes?
+    *   ¿Cómo se muestran los clientes (ej: en una tabla)?
+    *   ¿Cómo interactúa esta página con la base de datos (Supabase) para cada operación CRUD?
+    *   ¿Hay alguna validación de datos al crear o actualizar clientes?
+
+2.  **Página de Gestión de Repartidores (`/repartidores`):**
+    *   ¿Cuál es el propósito principal de esta página?
+    *   ¿Qué tipo de información se gestiona aquí (ej: datos de los repartidores de la empresa)?
+    *   ¿Qué operaciones CRUD se pueden realizar sobre los repartidores?
+    *   ¿Cómo se muestran los repartidores?
+    *   ¿Cómo interactúa esta página con la base de datos para cada operación CRUD?
+    *   ¿Hay alguna validación de datos al crear o actualizar repartidores?
+
+3.  **Página de Gestión de Clientes de Reparto (`/clientes-reparto`):**
+    *   ¿Cuál es el propósito principal de esta página?
+    *   ¿Qué tipo de información se gestiona aquí? (ej: sucursales, puntos de entrega específicos de un cliente principal).
+    *   ¿Cómo se relaciona un "Cliente de Reparto" con un "Cliente Principal" de la tabla `clientes`?
+    *   ¿Qué operaciones CRUD se pueden realizar sobre los "Clientes de Reparto"?
+    *   ¿Cómo se muestran estos registros? ¿Se muestra el nombre del cliente principal asociado?
+    *   ¿Cómo interactúa esta página con la base de datos para cada operación CRUD, incluyendo la relación con la tabla `clientes`?
+    *   ¿Qué campos específicos se gestionan para un "Cliente de Reparto" (ej: nombre_reparto, direccion_reparto, tarifa, etc.)?
+
+4.  **Página de Gestión de Repartos (`/repartos`):**
+    *   ¿Cuál es el propósito principal de esta página? (ej: programar y gestionar las entregas diarias).
+    *   ¿Qué información clave se gestiona para cada reparto (ej: fecha, repartidor asignado, cliente principal, clientes de reparto específicos para esa entrega, observaciones, estado)?
+    *   ¿Cómo se seleccionan el repartidor y el cliente principal?
+    *   ¿Cómo se seleccionan los "Clientes de Reparto" específicos que se incluirán en una entrega particular? (¿Se filtran por el cliente principal seleccionado?)
+    *   ¿Qué operaciones CRUD se pueden realizar sobre los repartos?
+    *   ¿Cómo se maneja la relación muchos-a-muchos entre `repartos` y `clientes_reparto` en la base de datos (tabla intermedia `reparto_cliente_reparto`) y cómo se refleja esto en la interfaz?
+    *   ¿Cómo se gestionan los estados de un reparto (Asignado, En Curso, Completo) en la interfaz y en la base de datos?
+    *   ¿Cómo se muestran los repartos? ¿Qué información clave se visualiza en la tabla de repartos?
+
+El objetivo es entender la funcionalidad de cada página, cómo interactúan entre sí y con la base de datos, y la lógica de negocio que implementan.
