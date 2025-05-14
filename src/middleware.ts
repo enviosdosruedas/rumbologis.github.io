@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const publicPaths = ['/login', '/test-login'];
+  const publicPaths = ['/login', '/test-login']; // Added /test-login
   // Ensure '/' for admin resolves to '/dashboard' due to page.tsx redirect
   const adminPaths = ['/', '/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
   const repartidorPaths = ['/dashboardrepartomobile'];
