@@ -14,7 +14,7 @@ import { MapPinIcon } from 'lucide-react';
 import { MobileDashboardHeader } from '@/components/dashboard-mobile/MobileDashboardHeader';
 import { MobileRepartosSection } from '@/components/dashboard-mobile/MobileRepartosSection';
 import { MobileRepartoTaskDetailsDialog } from '@/components/dashboard-mobile/MobileRepartoTaskDetailsDialog';
-import { MobileRepartoEnCursoMap } from '@/components/dashboard-mobile/MobileRepartoEnCursoMap'; // Import the map component
+import { MobileRepartoEnCursoMap } from '@/components/dashboard-mobile/MobileRepartoEnCursoMap'; 
 
 import type { RepartoEstado } from '@/types/reparto';
 
@@ -31,26 +31,23 @@ export interface EnrichedClienteRepartoTask {
   reparto_observaciones?: string | null;
   cliente_reparto_id: number;
   nombre_reparto: string;
-  direccion_reparto: string | null; // Critical for mapping
+  direccion_reparto: string | null; 
   telefono_reparto?: string | null;
   rango_horario?: string | null;
   tarifa?: number | null;
   cliente_principal_nombre?: string;
   fecha_reparto: string;
-  // Potential for geocoded coordinates if available from DB or geocoding service
-  // lat?: number; 
-  // lng?: number;
 }
 
 function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null; // Guard for SSR or non-browser environments
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
   return null;
 }
 
-// Mocked repartidor location for Mar del Plata (e.g., a central point or starting depot)
-const MOCK_REPARTIDOR_LOCATION = { lat: -38.0023, lng: -57.5575 }; // Example: Plaza Mitre, Mar del Plata
+const MOCK_REPARTIDOR_LOCATION = { lat: -38.0023, lng: -57.5575 }; 
 
 export default function DashboardRepartoMobilePage() {
   const router = useRouter();
@@ -66,32 +63,37 @@ export default function DashboardRepartoMobilePage() {
 
   useEffect(() => {
     setGoogleMapsApiKey(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
-    // Simulate fetching repartidor's current location (e.g., on component mount or interval)
-    // In a real app, this would use navigator.geolocation
     setRepartidorCurrentLocation(MOCK_REPARTIDOR_LOCATION);
-
     setCurrentDate(format(new Date(), "PPP", { locale: es }));
+
     const cookieData = getCookie('userData');
     if (cookieData) {
       try {
         const parsedData: UserData = JSON.parse(cookieData);
+        console.log("DashboardRepartoMobile: Parsed userData from cookie:", parsedData);
         setUserData(parsedData);
-        if (!parsedData.repartidor_id) {
-          toast({ title: "Error", description: "ID de repartidor no encontrado.", variant: "destructive" });
+        if (parsedData.rol !== 'repartidor' || !parsedData.repartidor_id) {
+          toast({ title: "Acceso Denegado", description: "No tiene permisos para acceder a esta página o falta ID de repartidor.", variant: "destructive" });
           router.push('/login');
         }
       } catch (e) {
-        console.error("Failed to parse user data from cookie", e);
+        console.error("DashboardRepartoMobile: Failed to parse user data from cookie", e);
+        toast({ title: "Error de Sesión", description: "No se pudo verificar su sesión. Por favor, inicie sesión de nuevo.", variant: "destructive" });
         router.push('/login');
       }
     } else {
+      console.log("DashboardRepartoMobile: No userData cookie found. Redirecting to login.");
       router.push('/login');
     }
   }, [router, toast]);
 
   const fetchRepartoTasks = useCallback(async () => {
-    if (!userData?.repartidor_id) return;
+    if (!userData?.repartidor_id) {
+      console.log("DashboardRepartoMobile: fetchRepartoTasks called without repartidor_id. UserData:", userData);
+      return;
+    }
     setIsLoading(true);
+    console.log(`DashboardRepartoMobile: Fetching tasks for repartidor_id: ${userData.repartidor_id}`);
 
     const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -116,7 +118,7 @@ export default function DashboardRepartoMobilePage() {
       `)
       .eq('repartidor_id', userData.repartidor_id)
       .eq('fecha_reparto', today)
-      .order('id', { foreignTable: 'reparto_cliente_reparto.clientes_reparto', ascending: true }); // Example ordering
+      .order('id', { referencedTable: 'reparto_cliente_reparto.clientes_reparto', ascending: true }); 
 
     if (error) {
       toast({ title: "Error al cargar repartos", description: error.message, variant: "destructive" });
@@ -138,9 +140,10 @@ export default function DashboardRepartoMobilePage() {
         }))
       );
       setTasks(enrichedTasks);
+      console.log("DashboardRepartoMobile: Tasks fetched:", enrichedTasks);
     }
     setIsLoading(false);
-  }, [userData?.repartidor_id, toast]);
+  }, [userData, toast]); // Added userData to dependency array
 
   useEffect(() => {
     if (userData?.repartidor_id) {
@@ -179,15 +182,16 @@ export default function DashboardRepartoMobilePage() {
   };
 
   const handleLogout = () => {
-    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    console.log('DashboardRepartoMobile: userData cookie cleared.');
     router.push('/login');
     router.refresh();
   };
 
-  if (!userData) {
+  if (!userData || userData.rol !== 'repartidor') { // Stricter check during initial render phase
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Cargando sesión...</p>
+        <p className="text-muted-foreground">Verificando sesión...</p>
       </div>
     );
   }
@@ -220,7 +224,7 @@ export default function DashboardRepartoMobilePage() {
           tasks={enCursoTasks}
           onUpdateEstado={handleUpdateEstado}
           onViewDetails={handleViewDetails}
-          onNavigate={handleNavigate} // Pass navigation handler
+          onNavigate={handleNavigate} 
           actionButtonLabel="Marcar Completo"
           targetStateForActionButton="Completo"
           emptyStateMessage="No hay repartos en curso."

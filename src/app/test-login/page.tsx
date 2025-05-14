@@ -40,7 +40,9 @@ export default function TestLoginPage() {
       redirectPath = '/dashboardrepartomobile';
     }
 
-    document.cookie = `userData=${JSON.stringify(userData)}; path=/; max-age=${60 * 60 * 24 * 7}`; // Cookie for 7 days
+    document.cookie = `userData=${JSON.stringify(userData)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    console.log('TestLogin page: userData cookie set. Value:', JSON.stringify(userData));
+
 
     toast({
       title: 'Inicio de Sesión de Prueba Exitoso',
@@ -50,7 +52,7 @@ export default function TestLoginPage() {
     });
 
     router.push(redirectPath);
-    router.refresh(); // Explicitly refresh
+    router.refresh(); 
   };
 
   return (

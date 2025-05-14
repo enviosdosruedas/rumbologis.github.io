@@ -43,10 +43,9 @@ export default function LoginPage() {
       return;
     }
 
-    // Fetch the user, including the repartidor_id
     const { data: user, error } = await supabase
       .from('usuarios')
-      .select('*, repartidor_id') // Ensure repartidor_id is selected
+      .select('*, repartidor_id') 
       .eq('nombre', nombre)
       .eq('pass', password) 
       .single();
@@ -70,7 +69,9 @@ export default function LoginPage() {
         cookieData.repartidor_id = user.repartidor_id;
       }
       
-      document.cookie = `userData=${JSON.stringify(cookieData)}; path=/; max-age=${60 * 60 * 24 * 7}`; // Cookie for 7 days
+      document.cookie = `userData=${JSON.stringify(cookieData)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      console.log('Login page: userData cookie set. Value:', JSON.stringify(cookieData));
+
 
       toast({
         title: 'Inicio de Sesión Exitoso',
@@ -79,7 +80,7 @@ export default function LoginPage() {
         className: "bg-accent text-accent-foreground"
       });
 
-      let targetPath = '/'; // Default path
+      let targetPath = '/'; 
       if (user.rol === 'admin') {
         targetPath = '/dashboard'; 
       } else if (user.rol === 'repartidor') {
@@ -87,7 +88,7 @@ export default function LoginPage() {
       }
       
       router.push(targetPath);
-      router.refresh(); // Explicitly refresh to ensure server-side state/middleware picks up the cookie
+      router.refresh(); 
     }
   };
 

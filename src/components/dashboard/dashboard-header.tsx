@@ -1,5 +1,5 @@
 
-"use client"; // Make client component for LogoutButton interactivity
+"use client"; 
 
 import type React from 'react';
 import { LogOut } from 'lucide-react';
@@ -18,8 +18,8 @@ function LogoutButton() {
   const { toast } = useToast();
 
   const handleLogout = () => {
-    // Clear the userData cookie
-    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    console.log('LogoutButton: userData cookie cleared.');
     
     toast({
       title: 'Sesión Cerrada',
@@ -27,7 +27,7 @@ function LogoutButton() {
     });
     
     router.push('/login');
-    router.refresh(); // Ensures server state is cleared
+    router.refresh(); 
   };
 
   return (

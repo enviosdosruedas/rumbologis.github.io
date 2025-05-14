@@ -12,6 +12,16 @@ interface MobileDashboardHeaderProps {
 }
 
 export function MobileDashboardHeader({ repartidorNombre, currentDate, onLogout }: MobileDashboardHeaderProps) {
+  
+  const handleLogoutClick = () => {
+    // The actual cookie clearing logic is expected to be in the onLogout prop passed from the page
+    // For example, the page's onLogout would do:
+    // document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    // router.push('/login');
+    // router.refresh();
+    onLogout(); 
+  }
+
   return (
     <header className="sticky top-0 z-20 flex flex-col p-4 border-b bg-card shadow-md">
       <div className="flex items-center justify-between w-full">
@@ -21,7 +31,7 @@ export function MobileDashboardHeader({ repartidorNombre, currentDate, onLogout 
             {repartidorNombre}
           </h1>
         </div>
-        <Button variant="ghost" size="sm" onClick={onLogout} className="text-destructive hover:bg-destructive/10">
+        <Button variant="ghost" size="sm" onClick={handleLogoutClick} className="text-destructive hover:bg-destructive/10">
           <LogOut className="mr-1.5 h-4 w-4" />
           Salir
         </Button>
@@ -33,5 +43,3 @@ export function MobileDashboardHeader({ repartidorNombre, currentDate, onLogout 
     </header>
   );
 }
-
-    
