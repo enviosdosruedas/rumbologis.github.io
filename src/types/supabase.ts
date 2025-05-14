@@ -49,9 +49,6 @@ export interface Database {
           vehiculo_asignado: string | null
           created_at?: string | null
           updated_at?: string | null
-          rol?: string | null 
-          usuario?: string | null 
-          auth_user_id?: string | null // FK to auth.users.id
         }
         Insert: {
           id: string 
@@ -61,9 +58,6 @@ export interface Database {
           vehiculo_asignado?: string | null
           created_at?: string | null
           updated_at?: string | null
-          rol?: string | null
-          usuario?: string | null
-          auth_user_id?: string | null
         }
         Update: {
           id?: string
@@ -73,18 +67,8 @@ export interface Database {
           vehiculo_asignado?: string | null
           created_at?: string | null
           updated_at?: string | null
-          rol?: string | null
-          usuario?: string | null
-          auth_user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "repartidores_auth_user_id_fkey"
-            columns: ["auth_user_id"]
-            referencedRelation: "users" // This references supabase.auth.users
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: [] // Relationship to usuarios will be from usuarios.repartidor_id
       }
       clientes_reparto: {
         Row: {
@@ -203,32 +187,42 @@ export interface Database {
           }
         ]
       }
-      usuarios: { // Nueva tabla usuarios
+      usuarios: {
         Row: {
           codigo: number
           nombre: string
-          pass: string // ADVERTENCIA: Debería ser un hash
+          pass: string 
           rol: string
           created_at?: string | null
           updated_at?: string | null
+          repartidor_id: string | null // Added FK to repartidores.id
         }
         Insert: {
-          codigo?: number // Autoincremental
+          codigo?: number 
           nombre: string
-          pass: string // ADVERTENCIA: Debería ser un hash
+          pass: string 
           rol: string
           created_at?: string | null
           updated_at?: string | null
+          repartidor_id?: string | null // Added
         }
         Update: {
           codigo?: number
           nombre?: string
-          pass?: string // ADVERTENCIA: Debería ser un hash
+          pass?: string 
           rol?: string
           created_at?: string | null
           updated_at?: string | null
+          repartidor_id?: string | null // Added
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_usuarios_repartidor" // Name of the FK constraint
+            columns: ["repartidor_id"]
+            referencedRelation: "repartidores"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

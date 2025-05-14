@@ -15,6 +15,13 @@ import type { Database } from '@/types/supabase';
 
 type Usuario = Database['public']['Tables']['usuarios']['Row'];
 
+interface UserDataCookie {
+  nombre: string;
+  rol: string;
+  codigo: number;
+  repartidor_id?: string; // UUID of the repartidor, if applicable
+}
+
 export default function LoginPage() {
   const [nombre, setNombre] = useState('');
   const [password, setPassword] = useState('');
@@ -36,11 +43,12 @@ export default function LoginPage() {
       return;
     }
 
+    // Fetch the user, including the repartidor_id
     const { data: user, error } = await supabase
       .from('usuarios')
-      .select('*')
+      .select('*, repartidor_id') // Ensure repartidor_id is selected
       .eq('nombre', nombre)
-      .eq('pass', password) // ADVERTENCIA: Comparación de contraseña en texto plano. MUY INSEGURO.
+      .eq('pass', password) 
       .single();
 
     setIsLoading(false);
@@ -52,10 +60,17 @@ export default function LoginPage() {
         variant: 'destructive',
       });
     } else {
-      // Set cookie with user data (nombre and rol)
-      // Note: This is a simple cookie for demonstration. For production, use secure, HttpOnly cookies with expiry.
-      const userData = JSON.stringify({ nombre: user.nombre, rol: user.rol, codigo: user.codigo });
-      document.cookie = `userData=${userData}; path=/; max-age=${60 * 60 * 24 * 7}`; // Cookie for 7 days
+      const cookieData: UserDataCookie = {
+        nombre: user.nombre,
+        rol: user.rol,
+        codigo: user.codigo,
+      };
+
+      if (user.rol === 'repartidor' && user.repartidor_id) {
+        cookieData.repartidor_id = user.repartidor_id;
+      }
+      
+      document.cookie = `userData=${JSON.stringify(cookieData)}; path=/; max-age=${60 * 60 * 24 * 7}`; // Cookie for 7 days
 
       toast({
         title: 'Inicio de Sesión Exitoso',
@@ -65,15 +80,12 @@ export default function LoginPage() {
       });
 
       if (user.rol === 'admin') {
-        router.push('/dashboard'); // Direct redirect to admin dashboard
+        router.push('/dashboard'); 
       } else if (user.rol === 'repartidor') {
         router.push('/dashboardrepartomobile');
       } else {
-        // Fallback, though ideally all users have a defined role and redirect
-        router.push('/'); // Default redirect if role is not admin or repartidor
+        router.push('/'); 
       }
-      // router.refresh(); // Removed: This might interrupt or complicate the navigation.
-                         // The middleware on the target route will handle auth checks.
     }
   };
 
@@ -125,4 +137,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

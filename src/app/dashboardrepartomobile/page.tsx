@@ -4,8 +4,6 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-// Supabase client might still be needed for other data operations, but not for auth.getSession or signOut
-// import { supabase } from '@/lib/supabaseClient'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, UserCircle, Truck } from 'lucide-react';
@@ -14,6 +12,7 @@ interface UserData {
   nombre: string;
   rol: string;
   codigo: number;
+  repartidor_id?: string; // Optional: UUID of the repartidor profile
 }
 
 // Helper function to get cookie (can be moved to a utils file)
@@ -37,16 +36,15 @@ export default function DashboardRepartoMobilePage() {
         setUserData(parsedData);
       } catch (e) {
         console.error("Failed to parse user data from cookie", e);
-        router.push('/login'); // Corrupted cookie, force login
+        router.push('/login'); 
       }
     } else {
-      router.push('/login'); // No cookie, force login
+      router.push('/login'); 
     }
     setIsLoading(false);
   }, [router]);
 
   const handleLogout = async () => {
-    // Clear the custom userData cookie
     document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.push('/login');
     router.refresh(); 
@@ -61,7 +59,6 @@ export default function DashboardRepartoMobilePage() {
   }
   
   if (!userData) {
-    // This case is mostly handled by useEffect redirect, but as a fallback
     return (
        <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-destructive">No autenticado. Redirigiendo...</p>
@@ -91,6 +88,7 @@ export default function DashboardRepartoMobilePage() {
                 <CardTitle className="text-2xl">¡Bienvenido!</CardTitle>
                 <CardDescription className="text-sm">
                   {userData.nombre || 'Repartidor'} (Rol: {userData.rol})
+                  {userData.repartidor_id && <span className="block text-xs">ID Repartidor: {userData.repartidor_id.substring(0,8)}...</span>}
                 </CardDescription>
               </div>
             </div>
@@ -99,7 +97,6 @@ export default function DashboardRepartoMobilePage() {
             <p className="text-muted-foreground">
               Aquí podrás ver tus repartos asignados y gestionar tus entregas.
             </p>
-            {/* Further dashboard content will go here */}
           </CardContent>
         </Card>
 
@@ -109,7 +106,6 @@ export default function DashboardRepartoMobilePage() {
             <CardDescription>Lista de entregas programadas para hoy.</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Placeholder for delivery list */}
             <div className="text-center py-8 border-2 border-dashed border-border rounded-md">
               <p className="text-muted-foreground">No hay repartos asignados para hoy.</p>
               <p className="text-xs text-muted-foreground mt-1">(Funcionalidad en desarrollo)</p>
