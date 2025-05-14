@@ -65,12 +65,12 @@ export default function LoginPage() {
       });
 
       if (user.rol === 'admin') {
-        router.push('/'); // This will redirect to /dashboard via src/app/page.tsx
+        router.push('/dashboard'); // Direct redirect to admin dashboard
       } else if (user.rol === 'repartidor') {
         router.push('/dashboardrepartomobile');
       } else {
         // Fallback, though ideally all users have a defined role and redirect
-        router.push('/');
+        router.push('/'); // Default redirect if role is not admin or repartidor
       }
       // router.refresh(); // Removed: This might interrupt or complicate the navigation.
                          // The middleware on the target route will handle auth checks.

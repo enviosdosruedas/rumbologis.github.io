@@ -1,83 +1,88 @@
 
-import { type NextRequest, NextResponse } from 'next/server';
-// createSupabaseMiddlewareClient might not be needed if we fully switch from Supabase Auth sessions
-// For now, keeping it in case other parts of the app still rely on it, but auth checks will use cookie.
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware';
 
-interface UserSession {
+interface UserData {
   nombre: string;
   rol: string;
   codigo: number;
 }
 
-export async function middleware(req: NextRequest) {
+export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
-  const { pathname } = req.nextUrl;
+  const supabase = await createSupabaseMiddlewareClient(request, res);
 
-  const userDataCookie = req.cookies.get('userData');
-  let userSession: UserSession | null = null;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (userDataCookie) {
+  const { pathname } = request.nextUrl;
+
+  // Try to get user data from cookie
+  const cookie = request.cookies.get('userData');
+  let userData: UserData | null = null;
+  if (cookie) {
     try {
-      userSession = JSON.parse(userDataCookie.value);
-    } catch (error) {
-      // Invalid cookie, treat as not logged in
-      console.error('Error parsing user cookie:', error);
-      // Optionally, delete the malformed cookie
-      res.cookies.delete('userData');
+      userData = JSON.parse(cookie.value);
+    } catch (e) {
+      console.error("Failed to parse user data from cookie in middleware", e);
+      // Invalid cookie, treat as unauthenticated
     }
   }
 
-  const isAdminRoute = pathname.startsWith('/dashboard') || 
-                       pathname.startsWith('/clientes') || 
-                       pathname.startsWith('/repartidores') || 
-                       pathname.startsWith('/clientes-reparto') || 
-                       pathname.startsWith('/repartos');
-  
-  const isRepartidorRoute = pathname.startsWith('/dashboardrepartomobile');
+  // Define public and protected routes
+  const publicPaths = ['/login'];
+  const adminPaths = ['/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
+  const repartidorPaths = ['/dashboardrepartomobile'];
 
-  // Not logged in
-  if (!userSession) {
-    if (pathname === '/login') {
-      return res; // Allow access to login page
+  // If user is not authenticated (no valid userData cookie)
+  if (!userData) {
+    if (!publicPaths.includes(pathname)) {
+      // If trying to access a protected route, redirect to login
+      return NextResponse.redirect(new URL('/login', request.url));
     }
-    if (isAdminRoute || isRepartidorRoute) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-    if (pathname === '/') { // Root path protection
-        return NextResponse.redirect(new URL('/login', req.url));
-    }
+    // Allow access to public paths
     return res;
   }
 
-  // Logged in
-  if (userSession) {
-    if (pathname === '/login') {
-      // If logged in and trying to access login, redirect to their respective dashboard
-      if (userSession.rol === 'admin') {
-        return NextResponse.redirect(new URL('/dashboard', req.url));
-      } else if (userSession.rol === 'repartidor') {
-        return NextResponse.redirect(new URL('/dashboardrepartomobile', req.url));
-      }
+  // User is authenticated (userData cookie exists and is valid)
+  if (pathname === '/login') {
+    // If authenticated user tries to access login page, redirect based on role
+    if (userData.rol === 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    } else if (userData.rol === 'repartidor') {
+      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
     }
+    // Fallback if role is unknown, redirect to a generic home or error page (or login again if preferred)
+    return NextResponse.redirect(new URL('/', request.url)); 
+  }
 
-    if (userSession.rol === 'admin') {
-      if (isRepartidorRoute) {
-        // Admin trying to access repartidor-specific dashboard, redirect to admin dashboard
-        // Or allow if admin should also see this: return res;
-        return NextResponse.redirect(new URL('/dashboard', req.url));
-      }
-      // Allow access to admin routes
-      return res;
+  // Role-based access control
+  if (userData.rol === 'admin') {
+    if (repartidorPaths.includes(pathname)) {
+      // Admin trying to access repartidor specific page, redirect to admin dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
+    // Allow access to admin paths and other general paths not explicitly restricted
+    return res;
+  }
 
-    if (userSession.rol === 'repartidor') {
-      if (isAdminRoute) {
-        // Repartidor trying to access admin routes, redirect to their dashboard
-        return NextResponse.redirect(new URL('/dashboardrepartomobile', req.url));
-      }
-      // Allow access to repartidor routes
-      return res;
+  if (userData.rol === 'repartidor') {
+    if (adminPaths.includes(pathname)) {
+      // Repartidor trying to access admin specific page, redirect to repartidor dashboard
+      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
     }
+    // Allow access to repartidor paths and other general paths not explicitly restricted
+    return res;
+  }
+  
+  // If role is not recognized or doesn't have access to the requested path
+  // (though this should be rare if roles are 'admin' or 'repartidor')
+  // Redirect to a default page or show an error. For now, redirect to login as a fallback.
+  // Consider a dedicated "access denied" page for better UX.
+  if (!publicPaths.includes(pathname)) { // Avoid redirect loop if already on a public path
+      return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return res;
@@ -93,13 +98,5 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    '/', // Match root to protect it or redirect
-    '/login',
-    '/dashboard',
-    '/dashboardrepartomobile',
-    '/clientes',
-    '/repartidores',
-    '/clientes-reparto',
-    '/repartos',
   ],
 };
