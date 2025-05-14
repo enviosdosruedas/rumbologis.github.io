@@ -1,0 +1,26 @@
+
+Por favor, modifica la página del Dashboard de "Rumbo Envíos" para que obtenga y muestre datos reales desde la base de datos Supabase.
+
+Específicamente, necesito que realices los siguientes cambios:
+
+1.  **Conexión a Supabase:**
+    *   Asegúrate de que la página del Dashboard (`src/app/(app)/dashboard/page.tsx`) pueda conectarse a la instancia de Supabase configurada en `src/lib/supabaseClient.ts`.
+
+2.  **Obtención de Datos para "Repartos Asignados Hoy":**
+    *   En `src/app/(app)/dashboard/page.tsx`, implementa la lógica necesaria para consultar la tabla "repartos" en Supabase.
+    *   La consulta debe contar el número total de repartos donde la columna `estado` sea igual a 'Asignado' Y la columna `fecha_reparto` sea igual a la fecha actual.
+    *   Actualiza el componente `RepartosAsignadosCard` en el Dashboard para que muestre este conteo obtenido de la base de datos.
+
+3.  **Obtención de Datos para "Repartos En Curso Hoy":**
+    *   En `src/app/(app)/dashboard/page.tsx`, implementa la lógica necesaria para consultar la tabla "repartos" en Supabase.
+    *   La consulta debe contar el número total de repartos donde la columna `estado` sea igual a 'En Curso' Y la columna `fecha_reparto` sea igual a la fecha actual.
+    *   Actualiza el componente `RepartosEnCursoCard` en el Dashboard para que muestre este conteo obtenido de la base de datos.
+
+4.  **Formato de Fecha:**
+    *   Asegúrate de que la fecha actual se formatee correctamente (por ejemplo, 'YYYY-MM-DD') para coincidir con el formato de la columna `fecha_reparto` en la base de datos al realizar las consultas.
+
+5.  **Manejo de Carga y Errores:**
+    *   Muestra un estado de carga apropiado mientras se recuperan los datos.
+    *   Implementa un manejo de errores para informar al usuario si hay problemas al obtener los datos de Supabase.
+
+El objetivo es que el Dashboard refleje dinámicamente la cantidad de repartos asignados y en curso para el día actual, basándose en la información almacenada en la base de datos Supabase. No es necesario modificar los componentes `RepartosAsignadosCard` o `RepartosEnCursoCard` internamente, solo pasarles el conteo correcto como prop.
