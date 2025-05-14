@@ -5,3 +5,4 @@ export default function HomePage() {
   redirect('/dashboard');
   return null; // redirect() throws an error, so this is technically unreachable but good practice.
 }
+

@@ -65,14 +65,15 @@ export default function LoginPage() {
       });
 
       if (user.rol === 'admin') {
-        router.push('/dashboard');
+        router.push('/'); // This will redirect to /dashboard via src/app/page.tsx
       } else if (user.rol === 'repartidor') {
         router.push('/dashboardrepartomobile');
       } else {
         // Fallback, though ideally all users have a defined role and redirect
         router.push('/');
       }
-      router.refresh(); 
+      // router.refresh(); // Removed: This might interrupt or complicate the navigation.
+                         // The middleware on the target route will handle auth checks.
     }
   };
 
@@ -124,3 +125,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
