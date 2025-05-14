@@ -55,6 +55,13 @@ src/
             cliente-form.tsx
             clientes-table.tsx
         ---------------------------------
+        dashboard-mobile/
+            MobileDashboardHeader.tsx
+            MobileRepartoEnCursoMap.tsx
+            MobileRepartoTaskCard.tsx
+            MobileRepartoTaskDetailsDialog.tsx
+            MobileRepartosSection.tsx
+        ---------------------------------
         repartos/
             cliente-reparto-selector.tsx
             reparto-details.tsx
@@ -72,10 +79,17 @@ src/
             clientes-reparto-table.tsx
         ---------------------------------
         dashboard/
+            clientes-principales-section.tsx
             dashboard-header.tsx
+            rendimiento-repartos-section.tsx
+            repartidores-activos-section.tsx
             repartos-asignados-card.tsx
             repartos-en-curso-card.tsx
+            resumen-repartos-dia-section.tsx
         ---------------------------------
+            charts/
+                repartos-status-chart.tsx
+            ---------------------------------
     schemas/
         cliente-reparto-schema.ts
         cliente-schema.ts

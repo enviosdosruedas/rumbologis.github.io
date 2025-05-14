@@ -1,12 +1,14 @@
 Archivos en el directorio raíz del proyecto:
 ==========================================
 
+- .env.local
 - .git/ (Directorio)
 - .gitignore
 - .idx/ (Directorio)
 - .modified
 - .next/ (Directorio)
 - .vscode/ (Directorio)
+- N/ (Directorio)
 - README.md
 - components.json
 - database_optimization_and_linking.sql
@@ -27,6 +29,7 @@ Archivos en el directorio raíz del proyecto:
 - prompt_descripcion_funcionalidades_paginas.txt
 - prompt_descripcion_proyecto.txt
 - proyecto.py
+- public/ (Directorio)
 - root_files_and_package_json.txt
 - rumbo_envios_auth_schema_updates.sql
 - rumbo_envios_schema.sql
@@ -50,7 +53,7 @@ Contenido de package.json:
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
+    "dev": "next dev -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
@@ -82,6 +85,7 @@ Contenido de package.json:
     "@radix-ui/react-tabs": "^1.1.11",
     "@radix-ui/react-toast": "^1.2.13",
     "@radix-ui/react-tooltip": "^1.2.6",
+    "@react-google-maps/api": "^2.20.6",
     "@supabase/ssr": "^0.4.1",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack-query-firebase/react": "^1.0.7",

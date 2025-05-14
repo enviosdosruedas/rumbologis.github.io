@@ -15,81 +15,88 @@ export async function middleware(request: NextRequest) {
 
   const cookie = request.cookies.get('userData');
   let userData: UserData | null = null;
-  
-  if (cookie) {
+
+  if (cookie?.value) {
     try {
       userData = JSON.parse(cookie.value);
     } catch (e) {
       console.error("Failed to parse user data from cookie in middleware. Cookie value:", cookie.value, "Error:", e);
-      // Delete the malformed cookie to prevent persistent issues.
-      res.cookies.delete('userData', { path: '/' });
+      // Clear malformed cookie by setting it with an immediate expiration
+      const newHeaders = new Headers(res.headers);
+      newHeaders.append('Set-Cookie', `userData=; Path=/; HttpOnly; Max-Age=0`);
+      return NextResponse.next({
+        request: {
+            headers: newHeaders,
+        },
+      });
     }
   }
 
   const publicPaths = ['/login', '/test-login'];
-  const adminPaths = ['/', '/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
-  const repartidorPaths = ['/dashboardrepartomobile'];
+  const adminDashboardPath = '/dashboard';
+  const repartidorDashboardPath = '/dashboardrepartomobile';
 
-  // Handle access to admin paths
-  if (adminPaths.includes(pathname)) {
-    // If an authenticated 'repartidor' tries to access an admin path, redirect them to their dashboard.
-    if (userData && userData.rol === 'repartidor') {
-      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
+  // Define protected admin paths (excluding root '/' which might be public or handled differently)
+  const protectedAdminPaths = [adminDashboardPath, '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
+  // The root path '/' is also considered protected and for admins by default here.
+  const allProtectedAdminPaths = ['/', ...protectedAdminPaths];
+
+
+  // If user is authenticated
+  if (userData) {
+    // If on a public path (like /login or /test-login) but already logged in, redirect to appropriate dashboard
+    if (publicPaths.includes(pathname)) {
+      if (userData.rol === 'admin') {
+        return NextResponse.redirect(new URL(adminDashboardPath, request.url));
+      } else if (userData.rol === 'repartidor') {
+        return NextResponse.redirect(new URL(repartidorDashboardPath, request.url));
+      }
+      // Fallback for other authenticated roles if any, or if logic is missing for a role
+      return NextResponse.redirect(new URL(adminDashboardPath, request.url)); // Default to admin dashboard
     }
-    // Otherwise (unauthenticated, or admin, or other roles), allow access to admin path.
-    return res; 
-  }
 
-  // Handle access to repartidor paths
-  if (repartidorPaths.includes(pathname)) {
-    if (!userData) { // Unauthenticated trying to access repartidor path
+    // Role-based access control for protected paths
+    if (userData.rol === 'admin') {
+      // Admin trying to access repartidor's dashboard
+      if (pathname === repartidorDashboardPath) {
+        return NextResponse.redirect(new URL(adminDashboardPath, request.url));
+      }
+      // Admin can access admin paths
+      if (allProtectedAdminPaths.includes(pathname)) {
+        return res; // Allow access
+      }
+      // Admin on an unknown/unauthorized path, redirect to their dashboard
+      console.warn(`Admin "${userData.nombre}" on unhandled/unauthorized path "${pathname}". Redirecting to admin dashboard.`);
+      return NextResponse.redirect(new URL(adminDashboardPath, request.url));
+
+    } else if (userData.rol === 'repartidor') {
+      // Repartidor trying to access admin paths
+      if (allProtectedAdminPaths.includes(pathname)) {
+        return NextResponse.redirect(new URL(repartidorDashboardPath, request.url));
+      }
+      // Repartidor can access their dashboard
+      if (pathname === repartidorDashboardPath) {
+        return res; // Allow access
+      }
+      // Repartidor on an unknown/unauthorized path, redirect to their dashboard
+      console.warn(`Repartidor "${userData.nombre}" on unhandled/unauthorized path "${pathname}". Redirecting to repartidor dashboard.`);
+      return NextResponse.redirect(new URL(repartidorDashboardPath, request.url));
+
+    } else {
+      // Authenticated user with an unknown/unhandled role
+      console.warn(`Authenticated user "${userData.nombre}" with unknown role "${userData.rol}" accessing "${pathname}". Redirecting to login.`);
+      const newHeaders = new Headers(res.headers);
+      newHeaders.append('Set-Cookie', `userData=; Path=/; HttpOnly; Max-Age=0`); // Clear cookie
+      return NextResponse.redirect(new URL('/login', request.url),{ headers: newHeaders });
+    }
+  } else { // User is NOT authenticated
+    // If trying to access a protected path (any path not in publicPaths)
+    if (!publicPaths.includes(pathname)) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    if (userData.rol === 'admin') { // Admin trying to access repartidor path
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    if (userData.rol === 'repartidor') { // Repartidor accessing their path
-      return res;
-    }
-    // Any other authenticated role trying to access repartidor path without specific allowance
-    console.warn(`User "${userData.nombre}" (role: "${userData.rol}") attempted to access repartidor path "${pathname}". Redirecting to login.`);
-    res.cookies.delete('userData', { path: '/' });
-    return NextResponse.redirect(new URL('/login', request.url), { headers: res.headers });
-  }
-  
-  // For non-admin and non-repartidor paths (i.e., public paths or others if they exist)
-  // Handle unauthenticated users
-  if (!userData) {
-    // If not an admin path or repartidor path (already handled) and not a public path, redirect to login
-    if (!publicPaths.includes(pathname)) { 
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    // Allow access to public paths
+    // Allow access to public paths for unauthenticated users (e.g. /login, /test-login)
     return res;
   }
-
-  // At this point, userData exists.
-  // Handle authenticated users trying to access login/test-login
-  if (pathname === '/login' || pathname === '/test-login') {
-    if (userData.rol === 'admin') { // This admin might be from a previous session or test-login
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    } else if (userData.rol === 'repartidor') {
-      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
-    }
-    // Default redirect for other authenticated roles or if role logic is extended
-    return NextResponse.redirect(new URL('/dashboard', request.url)); 
-  }
-  
-  // Fallback for any other authenticated user scenario not covered by specific role path checks
-  // e.g. an unknown role trying to access a path that isn't explicitly public or defined for them.
-  if (userData.rol !== 'admin' && userData.rol !== 'repartidor' && !publicPaths.includes(pathname)) {
-    console.warn(`Authenticated user "${userData.nombre}" (role: "${userData.rol}") on an unhandled path "${pathname}". Redirecting to login.`);
-    res.cookies.delete('userData', { path: '/' });
-    return NextResponse.redirect(new URL('/login', request.url), { headers: res.headers });
-  }
-
-  // If all checks pass, allow the request
-  return res;
 }
 
 export const config = {
