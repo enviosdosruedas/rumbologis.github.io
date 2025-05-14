@@ -11,11 +11,12 @@ interface UserData {
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
-  const supabase = await createSupabaseMiddlewareClient(request, res);
+  // Not creating supabase client here anymore as it's not directly used for auth checks in this version
+  // const supabase = await createSupabaseMiddlewareClient(request, res);
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // const {
+  //   data: { session },
+  // } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
 
@@ -55,7 +56,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
     }
     // Fallback if role is unknown, redirect to a generic home or error page (or login again if preferred)
-    return NextResponse.redirect(new URL('/', request.url)); 
+    // Redirecting to '/' which then redirects to '/dashboard' or appropriate page based on other logic.
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Role-based access control
@@ -76,12 +78,12 @@ export async function middleware(request: NextRequest) {
     // Allow access to repartidor paths and other general paths not explicitly restricted
     return res;
   }
-  
+
   // If role is not recognized or doesn't have access to the requested path
   // (though this should be rare if roles are 'admin' or 'repartidor')
   // Redirect to a default page or show an error. For now, redirect to login as a fallback.
-  // Consider a dedicated "access denied" page for better UX.
-  if (!publicPaths.includes(pathname)) { // Avoid redirect loop if already on a public path
+  // Avoid redirect loop if already on a public path (though previous checks should handle this)
+  if (!publicPaths.includes(pathname) && !adminPaths.includes(pathname) && !repartidorPaths.includes(pathname) ) {
       return NextResponse.redirect(new URL('/login', request.url));
   }
 
