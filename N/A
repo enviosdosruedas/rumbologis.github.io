@@ -1,0 +1,67 @@
+
+**Contexto del Proyecto:**
+
+*   Framework: Next.js
+*   Base de Datos: Supabase
+*   Página de Login Principal: `src/app/login/page.tsx`
+*   Página de Test Login (con problemas): `src/app/test-login/page.tsx`
+*   Cliente Supabase: `src/lib/supabaseClient.ts`
+*   Middleware: `src/middleware.ts` (y `src/lib/supabase/middleware.ts` si existe)
+*   Tabla de Usuarios (`usuarios`): Contiene `codigo`, `nombre`, `pass`, `rol`, `repartidor_id`.
+
+**Objetivo Principal:**
+
+Diagnosticar y corregir la causa del bucle de redirección entre `/test-login` y `/login`, y optimizar el flujo de autenticación general.
+
+**Pasos a Seguir (Instrucciones para la IA):**
+
+1.  **Revisión de la Configuración de Supabase:**
+    *   **Cliente Supabase (`src/lib/supabaseClient.ts`):**
+        *   Verifica que la URL y la clave anónima de Supabase se estén cargando y utilizando correctamente.
+        *   Asegúrate de que el cliente Supabase se inicialice sin errores.
+    *   **Middleware Supabase (si aplica en `src/lib/supabase/middleware.ts`):**
+        *   Si se utiliza `createSupabaseMiddlewareClient` u otra lógica de Supabase en el middleware, revisa su configuración y uso.
+
+2.  **Análisis del Middleware (`src/middleware.ts`):**
+    *   **Lógica de Autenticación:** Examina cómo el middleware verifica si un usuario está autenticado. Presta atención a cómo se lee y parsea la cookie `userData`.
+    *   **Protección de Rutas:** Revisa las reglas que definen qué rutas son públicas y cuáles requieren autenticación.
+    *   **Lógica de Redirección:**
+        *   Identifica todas las condiciones que provocan una redirección a `/login` o a `/test-login`.
+        *   Analiza si la lógica para usuarios autenticados que intentan acceder a `/login` o `/test-login` es correcta y no genera conflictos.
+        *   Verifica cómo se manejan los diferentes roles (`admin`, `repartidor`) para las redirecciones.
+        *   **Específicamente, determina por qué un usuario podría ser redirigido desde `/test-login` de vuelta a `/login` (o viceversa) creando un bucle.** Podría ser una condición incorrecta en la protección de `/test-login` o un problema con la detección del estado de autenticación.
+
+3.  **Análisis de las Páginas de Login:**
+    *   **Página de Login Principal (`src/app/login/page.tsx`):**
+        *   Revisa cómo se maneja el envío del formulario y la comunicación con Supabase para autenticar.
+        *   Verifica la lógica de redirección *después* de un inicio de sesión exitoso o fallido. ¿Intenta redirigir a `/test-login` bajo alguna condición que cree un conflicto?
+    *   **Página de Test Login (`src/app/test-login/page.tsx`):**
+        *   Analiza su propósito. ¿Es para usuarios ya autenticados? ¿Requiere un rol específico?
+        *   Examina cualquier lógica de `useEffect` o comprobaciones de autenticación al cargar la página que puedan estar causando una redirección.
+        *   Verifica cómo establece la cookie `userData` para los roles de prueba y la lógica de redirección posterior.
+
+4.  **Diagnóstico del Bucle de Redirección:**
+    *   Con base en el análisis anterior, identifica la secuencia exacta de eventos que lleva al bucle entre `/test-login` y `/login`.
+    *   ¿Es un problema de la cookie `userData` (no se establece, se borra incorrectamente, se interpreta mal)?
+    *   ¿Es una condición conflictiva en el middleware donde ambas páginas se redirigen mutuamente?
+    *   ¿Hay alguna redirección del lado del cliente en las páginas mismas que esté contribuyendo al problema?
+
+5.  **Optimización y Corrección:**
+    *   **Simplificar Lógica:** Elimina cualquier lógica de autenticación o redirección duplicada o innecesaria entre el middleware y las páginas.
+    *   **Corregir Redirecciones:** Ajusta las reglas en `src/middleware.ts` y, si es necesario, en las páginas de login para asegurar:
+        *   Los usuarios no autenticados que intentan acceder a rutas protegidas (incluyendo `/test-login` si es protegida) son redirigidos a `/login`.
+        *   Los usuarios autenticados que intentan acceder a `/login` son redirigidos a su dashboard correspondiente (`/dashboard` para admin, `/dashboardrepartomobile` para repartidor).
+        *   La página `/test-login` debe tener una lógica clara:
+            *   Si es una página para *realizar* un login de prueba (es decir, establecer una cookie y redirigir), no debería requerir autenticación previa para accederla.
+            *   Si es una página *para usuarios ya logueados* con fines de prueba, debe estar protegida y no causar redirecciones a `/login`.
+    *   **Consistencia en el Manejo de Cookies:** Asegúrate de que la cookie `userData` se establezca y lea consistentemente.
+    *   **Flujo Claro:** El flujo de autenticación debe ser lineal y predecible.
+
+6.  **Verificación Adicional:**
+    *   Revisa si hay componentes que no se estén utilizando o configuraciones duplicadas en general en el proyecto que puedan simplificarse, aunque el foco principal es la autenticación.
+
+**Resultado Esperado:**
+
+Un sistema de autenticación y redirección que funcione correctamente, donde los usuarios puedan acceder a `/login`, iniciar sesión y ser redirigidos a su dashboard correspondiente, y donde `/test-login` funcione según su propósito previsto sin causar bucles de redirección.
+
+    
