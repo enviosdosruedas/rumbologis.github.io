@@ -1,7 +1,9 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware';
+// createSupabaseMiddlewareClient is available but not directly used for the custom 'userData' cookie check.
+// It would be used if Supabase's session management (e.g., getSession()) was integrated into this middleware.
+// import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'; 
 
 interface UserData {
   nombre: string;
@@ -11,12 +13,7 @@ interface UserData {
 }
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  // Initialize Supabase client for middleware.
-  // While not directly used for the custom 'userData' cookie check below,
-  // it's good practice to have it correctly set up if other parts of the
-  // middleware or Supabase Auth features (like getSession) were to be used.
-  // const supabase = await createSupabaseMiddlewareClient(request, res);
+  const res = NextResponse.next(); // Response object that can be modified (e.g., for setting/deleting cookies)
 
   const { pathname } = request.nextUrl;
 
@@ -28,72 +25,84 @@ export async function middleware(request: NextRequest) {
       userData = JSON.parse(cookie.value);
     } catch (e) {
       console.error("Failed to parse user data from cookie in middleware. Cookie value:", cookie.value, "Error:", e);
-      // Optional: Treat as unauthenticated or try to delete the malformed cookie
-      // To delete: res.cookies.delete('userData', { path: '/' });
-      // return NextResponse.redirect(new URL('/login', request.url), { headers: res.headers });
+      // userData remains null.
+      // Delete the malformed cookie to prevent persistent issues.
+      res.cookies.delete('userData', { path: '/' });
     }
   }
 
   const publicPaths = ['/login', '/test-login'];
-  const adminPaths = ['/','/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
+  // Ensure '/' for admin resolves to '/dashboard' due to page.tsx redirect
+  const adminPaths = ['/', '/dashboard', '/clientes', '/repartidores', '/clientes-reparto', '/repartos'];
   const repartidorPaths = ['/dashboardrepartomobile'];
 
+  // Handle unauthenticated users
   if (!userData) {
     if (!publicPaths.includes(pathname)) {
+      // If trying to access a protected path without being authenticated, redirect to login.
       return NextResponse.redirect(new URL('/login', request.url));
     }
+    // Allow access to public paths for unauthenticated users.
     return res;
   }
 
-  // User is authenticated
+  // Handle authenticated users trying to access login/test-login pages
   if (pathname === '/login' || pathname === '/test-login') {
     if (userData.rol === 'admin') {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url)); // Admin dashboard
     } else if (userData.rol === 'repartidor') {
-      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
+      return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url)); // Repartidor dashboard
     }
-    return NextResponse.redirect(new URL('/', request.url));
+    // Default redirect for other authenticated roles or if role logic is extended
+    return NextResponse.redirect(new URL('/dashboard', request.url)); 
   }
 
+  // Authorization for authenticated users based on role
   if (userData.rol === 'admin') {
-    if (repartidorPaths.includes(pathname)) {
-      return NextResponse.redirect(new URL('/', request.url));
+    if (repartidorPaths.includes(pathname) && !adminPaths.includes(pathname)) {
+      // Admin trying to access a repartidor-only path that isn't also an admin path
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
+    // If it's an admin path, allow. If not (and not public, not repartidor-only), it will be caught by the final fallback.
   } else if (userData.rol === 'repartidor') {
-    if (adminPaths.includes(pathname)) {
+    if (adminPaths.includes(pathname) && !repartidorPaths.includes(pathname)) {
+      // Repartidor trying to access an admin-only path that isn't also a repartidor path
       return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
     }
+    // If it's a repartidor path, allow. If not (and not public, not admin-only), it will be caught by the final fallback.
   } else {
-    // If role is unknown but user is somehow authenticated and not on a public path
+    // Unknown role for an authenticated user
     if (!publicPaths.includes(pathname)) {
-        console.warn(`Unknown role "${userData.rol}" for user "${userData.nombre}". Redirecting to login.`);
-        // Clear potentially problematic cookie
-        res.cookies.delete('userData', { path: '/' });
+        console.warn(`Unknown role "${userData.rol}" for user "${userData.nombre}" attempting to access "${pathname}". Redirecting to login.`);
+        res.cookies.delete('userData', { path: '/' }); // Clear cookie
         return NextResponse.redirect(new URL('/login', request.url), { headers: res.headers });
     }
   }
   
-  // Fallback if path does not match allowed paths for the role (and not public)
+  // Final authorization check: if authenticated user is trying to access a non-public path
+  // that doesn't match their role's allowed paths.
    if (!publicPaths.includes(pathname) &&
        ((userData.rol === 'admin' && !adminPaths.includes(pathname)) ||
         (userData.rol === 'repartidor' && !repartidorPaths.includes(pathname)))
       ) {
-        console.warn(`User "${userData.nombre}" with role "${userData.rol}" attempted to access restricted path "${pathname}".`);
+        console.warn(`User "${userData.nombre}" (role: "${userData.rol}") attempted to access restricted path "${pathname}". Redirecting.`);
+        // Redirect to their respective dashboards or login if dashboard is somehow restricted
         if (userData.rol === 'admin') {
             return NextResponse.redirect(new URL('/dashboard', request.url));
         } else if (userData.rol === 'repartidor') {
             return NextResponse.redirect(new URL('/dashboardrepartomobile', request.url));
         }
-        // Default redirect for other authenticated roles trying to access restricted paths
+        // Fallback for any other role not matching, clear cookie and send to login
         res.cookies.delete('userData', { path: '/' });
         return NextResponse.redirect(new URL('/login', request.url), { headers: res.headers });
    }
 
-  return res;
+  return res; // Allow access if all checks pass
 }
 
 export const config = {
   matcher: [
+    // Match all routes except for static files, images, and specific assets
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
