@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'Rumbo Envíos',
   description: 'Gestión de Clientes y Repartidores',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -21,6 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body className="antialiased">
         {children}
         <Toaster />
@@ -28,3 +33,4 @@ export default function RootLayout({
     </html>
   );
 }
+
