@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -22,10 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -35,6 +32,7 @@ import { repartoSchema, type RepartoFormData } from "@/schemas/reparto-schema";
 import type { Repartidor } from "@/types/repartidor";
 import type { Cliente } from "@/types/cliente";
 import type { ClienteReparto } from "@/types/cliente-reparto";
+import { ClienteRepartoSelector } from "./cliente-reparto-selector"; // Importar el nuevo componente
 
 interface RepartoFormProps {
   onSubmit: (data: RepartoFormData) => void;
@@ -74,7 +72,7 @@ export function RepartoForm({
     if (selectedClienteId) {
       const filtered = clientesRepartoList.filter(cr => cr.cliente_id === selectedClienteId);
       setAvailableClientesReparto(filtered);
-      // When client changes, update selected_ids to only include those belonging to the new client
+      
       const currentSelections = form.getValues("clientes_reparto_seleccionados_ids") || [];
       const validSelectionsForNewClient = currentSelections.filter(id => 
         filtered.some(crFiltered => crFiltered.id === id)
@@ -82,7 +80,7 @@ export function RepartoForm({
       form.setValue('clientes_reparto_seleccionados_ids', validSelectionsForNewClient);
     } else {
       setAvailableClientesReparto([]);
-      form.setValue('clientes_reparto_seleccionados_ids', []); // Clear selections if no client is selected
+      form.setValue('clientes_reparto_seleccionados_ids', []); 
     }
   }, [selectedClienteId, clientesRepartoList, form]);
 
@@ -168,7 +166,6 @@ export function RepartoForm({
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
-                  // Resetting of clientes_reparto_seleccionados_ids is handled by useEffect
                 }}
                 defaultValue={field.value}
               >
@@ -190,64 +187,12 @@ export function RepartoForm({
           )}
         />
 
-        {selectedClienteId && availableClientesReparto.length > 0 && (
-          <FormField
-            control={form.control}
-            name="clientes_reparto_seleccionados_ids"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Clientes de Reparto Asociados</FormLabel>
-                <ScrollArea className="h-40 w-full rounded-md border p-4">
-                  <div className="space-y-2">
-                    {availableClientesReparto.map((cr) => (
-                      <FormField
-                        key={cr.id}
-                        control={form.control}
-                        name="clientes_reparto_seleccionados_ids"
-                        render={({ field: subField }) => {
-                          return (
-                            <FormItem
-                              key={cr.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={subField.value?.includes(cr.id)}
-                                  onCheckedChange={(checked) => {
-                                    const currentValues = subField.value || [];
-                                    return checked
-                                      ? subField.onChange([...currentValues, cr.id])
-                                      : subField.onChange(
-                                          currentValues.filter(
-                                            (value) => value !== cr.id
-                                          )
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal text-sm">
-                                {cr.nombre_reparto} ({cr.direccion_reparto})
-                                {cr.tarifa && ` - Tarifa: $${cr.tarifa}`}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-         {selectedClienteId && availableClientesReparto.length === 0 && (
-            <p className="text-sm text-muted-foreground">Este cliente no tiene clientes de reparto asociados. Puede crearlos en la sección 'Clientes Reparto'.</p>
-        )}
-        {!selectedClienteId && (
-            <p className="text-sm text-muted-foreground">Seleccione un cliente principal para ver sus clientes de reparto asociados.</p>
-        )}
-
+        <ClienteRepartoSelector
+          control={form.control}
+          name="clientes_reparto_seleccionados_ids"
+          availableClientesReparto={availableClientesReparto}
+          selectedClienteId={selectedClienteId}
+        />
 
         <FormField
           control={form.control}
@@ -260,7 +205,7 @@ export function RepartoForm({
                   placeholder="Notas adicionales sobre el reparto..."
                   className="resize-none"
                   {...field}
-                  value={field.value || ""} // Ensure value is not null/undefined for textarea
+                  value={field.value || ""} 
                 />
               </FormControl>
               <FormMessage />
