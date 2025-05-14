@@ -79,13 +79,15 @@ export default function LoginPage() {
         className: "bg-accent text-accent-foreground"
       });
 
+      let targetPath = '/'; // Default path
       if (user.rol === 'admin') {
-        router.push('/dashboard'); 
+        targetPath = '/dashboard'; 
       } else if (user.rol === 'repartidor') {
-        router.push('/dashboardrepartomobile');
-      } else {
-        router.push('/'); 
+        targetPath = '/dashboardrepartomobile';
       }
+      
+      router.push(targetPath);
+      router.refresh(); // Explicitly refresh to ensure server-side state/middleware picks up the cookie
     }
   };
 

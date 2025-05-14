@@ -50,7 +50,7 @@ export default function TestLoginPage() {
     });
 
     router.push(redirectPath);
-    router.refresh(); 
+    router.refresh(); // Explicitly refresh
   };
 
   return (
