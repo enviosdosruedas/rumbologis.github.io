@@ -3,7 +3,7 @@
 
 import type React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Info, ChevronsRight, CheckCircle } from 'lucide-react';
+import { Clock, MapPin, Info, ChevronsRight, CheckCircle, Navigation } from 'lucide-react'; // Added Navigation
 import type { EnrichedClienteRepartoTask } from '@/app/dashboardrepartomobile/page';
 import type { RepartoEstado } from '@/types/reparto';
 
@@ -11,6 +11,7 @@ interface MobileRepartoTaskCardProps {
   task: EnrichedClienteRepartoTask;
   onUpdateEstado: (repartoId: number, nuevoEstado: RepartoEstado) => void;
   onViewDetails: (task: EnrichedClienteRepartoTask) => void;
+  onNavigate?: (task: EnrichedClienteRepartoTask) => void; // Optional navigation handler
   actionButtonLabel?: string;
   targetStateForActionButton?: RepartoEstado;
   isCompleto?: boolean;
@@ -20,6 +21,7 @@ export function MobileRepartoTaskCard({
   task,
   onUpdateEstado,
   onViewDetails,
+  onNavigate,
   actionButtonLabel,
   targetStateForActionButton,
   isCompleto = false,
@@ -28,6 +30,12 @@ export function MobileRepartoTaskCard({
   const handleActionClick = () => {
     if (targetStateForActionButton) {
       onUpdateEstado(task.reparto_id, targetStateForActionButton);
+    }
+  };
+
+  const handleNavigationClick = () => {
+    if (onNavigate) {
+      onNavigate(task);
     }
   };
 
@@ -60,6 +68,17 @@ export function MobileRepartoTaskCard({
           <Info className="mr-1.5 h-3.5 w-3.5" />
           Detalles
         </Button>
+        {onNavigate && !isCompleto && (
+             <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleNavigationClick} 
+                className="flex-1 text-xs px-2 py-1 h-auto border-blue-500 text-blue-500 hover:bg-blue-500/10"
+            >
+                <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                Navegar
+            </Button>
+        )}
         {!isCompleto && actionButtonLabel && targetStateForActionButton && (
           <Button 
             size="sm" 
@@ -83,5 +102,3 @@ export function MobileRepartoTaskCard({
     </div>
   );
 }
-
-    

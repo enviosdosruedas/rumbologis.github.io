@@ -9,10 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/lib/supabaseClient";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { MapPinIcon } from 'lucide-react';
 
 import { MobileDashboardHeader } from '@/components/dashboard-mobile/MobileDashboardHeader';
 import { MobileRepartosSection } from '@/components/dashboard-mobile/MobileRepartosSection';
 import { MobileRepartoTaskDetailsDialog } from '@/components/dashboard-mobile/MobileRepartoTaskDetailsDialog';
+import { MobileRepartoEnCursoMap } from '@/components/dashboard-mobile/MobileRepartoEnCursoMap'; // Import the map component
 
 import type { RepartoEstado } from '@/types/reparto';
 
@@ -29,12 +31,15 @@ export interface EnrichedClienteRepartoTask {
   reparto_observaciones?: string | null;
   cliente_reparto_id: number;
   nombre_reparto: string;
-  direccion_reparto: string | null;
+  direccion_reparto: string | null; // Critical for mapping
   telefono_reparto?: string | null;
   rango_horario?: string | null;
   tarifa?: number | null;
   cliente_principal_nombre?: string;
   fecha_reparto: string;
+  // Potential for geocoded coordinates if available from DB or geocoding service
+  // lat?: number; 
+  // lng?: number;
 }
 
 function getCookie(name: string): string | null {
@@ -43,6 +48,9 @@ function getCookie(name: string): string | null {
   if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
   return null;
 }
+
+// Mocked repartidor location for Mar del Plata (e.g., a central point or starting depot)
+const MOCK_REPARTIDOR_LOCATION = { lat: -38.0023, lng: -57.5575 }; // Example: Plaza Mitre, Mar del Plata
 
 export default function DashboardRepartoMobilePage() {
   const router = useRouter();
@@ -53,8 +61,15 @@ export default function DashboardRepartoMobilePage() {
   const [selectedTask, setSelectedTask] = useState<EnrichedClienteRepartoTask | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
+  const [repartidorCurrentLocation, setRepartidorCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    setGoogleMapsApiKey(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+    // Simulate fetching repartidor's current location (e.g., on component mount or interval)
+    // In a real app, this would use navigator.geolocation
+    setRepartidorCurrentLocation(MOCK_REPARTIDOR_LOCATION);
+
     setCurrentDate(format(new Date(), "PPP", { locale: es }));
     const cookieData = getCookie('userData');
     if (cookieData) {
@@ -100,14 +115,15 @@ export default function DashboardRepartoMobilePage() {
         )
       `)
       .eq('repartidor_id', userData.repartidor_id)
-      .eq('fecha_reparto', today);
+      .eq('fecha_reparto', today)
+      .order('id', { foreignTable: 'reparto_cliente_reparto.clientes_reparto', ascending: true }); // Example ordering
 
     if (error) {
       toast({ title: "Error al cargar repartos", description: error.message, variant: "destructive" });
       setTasks([]);
     } else {
       const enrichedTasks: EnrichedClienteRepartoTask[] = data.flatMap(reparto =>
-        (reparto.reparto_cliente_reparto || []).map((rcr: any) => ({ // Use any for rcr due to Supabase dynamic typing
+        (reparto.reparto_cliente_reparto || []).map((rcr: any) => ({
           reparto_id: reparto.id,
           reparto_estado: reparto.estado as RepartoEstado,
           reparto_observaciones: reparto.observaciones,
@@ -132,7 +148,6 @@ export default function DashboardRepartoMobilePage() {
     }
   }, [userData, fetchRepartoTasks]);
 
-
   const handleUpdateEstado = async (repartoId: number, nuevoEstado: RepartoEstado) => {
     setIsLoading(true);
     const { error } = await supabase
@@ -144,7 +159,7 @@ export default function DashboardRepartoMobilePage() {
       toast({ title: "Error actualizando estado", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Estado Actualizado", description: `Reparto marcado como ${nuevoEstado}.`, className: "bg-accent text-accent-foreground"});
-      fetchRepartoTasks(); // Re-fetch to update lists
+      fetchRepartoTasks(); 
     }
     setIsLoading(false);
   };
@@ -152,6 +167,15 @@ export default function DashboardRepartoMobilePage() {
   const handleViewDetails = (task: EnrichedClienteRepartoTask) => {
     setSelectedTask(task);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleNavigate = (task: EnrichedClienteRepartoTask) => {
+    if (task.direccion_reparto) {
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.direccion_reparto)}`;
+      window.open(mapsUrl, '_blank');
+    } else {
+      toast({ title: "Error", description: "No hay dirección para navegar.", variant: "destructive" });
+    }
   };
 
   const handleLogout = () => {
@@ -171,6 +195,8 @@ export default function DashboardRepartoMobilePage() {
   const asignadosTasks = tasks.filter(task => task.reparto_estado === 'Asignado');
   const enCursoTasks = tasks.filter(task => task.reparto_estado === 'En Curso');
   const completadosTasks = tasks.filter(task => task.reparto_estado === 'Completo');
+  
+  const nextEnCursoTask = enCursoTasks.length > 0 ? enCursoTasks[0] : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-secondary/50">
@@ -190,30 +216,47 @@ export default function DashboardRepartoMobilePage() {
         )}
 
         <MobileRepartosSection
-          title="Asignados para Hoy"
-          tasks={asignadosTasks}
-          onUpdateEstado={handleUpdateEstado}
-          onViewDetails={handleViewDetails}
-          actionButtonLabel="Iniciar Ruta"
-          targetStateForActionButton="En Curso"
-          emptyStateMessage="No hay repartos asignados."
-        />
-        <MobileRepartosSection
           title="En Ruta"
           tasks={enCursoTasks}
           onUpdateEstado={handleUpdateEstado}
           onViewDetails={handleViewDetails}
+          onNavigate={handleNavigate} // Pass navigation handler
           actionButtonLabel="Marcar Completo"
           targetStateForActionButton="Completo"
           emptyStateMessage="No hay repartos en curso."
+          mapComponent={
+            nextEnCursoTask ? (
+              <MobileRepartoEnCursoMap 
+                nextTask={nextEnCursoTask} 
+                repartidorLocation={repartidorCurrentLocation}
+                apiKey={googleMapsApiKey}
+              />
+            ) : (
+              <div className="p-4 my-4 text-center text-sm text-muted-foreground bg-card rounded-lg shadow-md">
+                Seleccione un reparto en curso para ver el mapa.
+              </div>
+            )
+          }
         />
+
+        <MobileRepartosSection
+          title="Asignados para Hoy"
+          tasks={asignadosTasks}
+          onUpdateEstado={handleUpdateEstado}
+          onViewDetails={handleViewDetails}
+          onNavigate={handleNavigate}
+          actionButtonLabel="Iniciar Ruta"
+          targetStateForActionButton="En Curso"
+          emptyStateMessage="No hay repartos asignados."
+        />
+       
         <MobileRepartosSection
           title="Completados Hoy"
           tasks={completadosTasks}
-          onUpdateEstado={handleUpdateEstado} // Potentially to revert state, or just view details
+          onUpdateEstado={handleUpdateEstado} 
           onViewDetails={handleViewDetails}
           emptyStateMessage="No hay repartos completados."
-          isCompletoSection // To disable action button or change its behavior
+          isCompletoSection 
         />
       </main>
       
@@ -230,5 +273,3 @@ export default function DashboardRepartoMobilePage() {
     </div>
   );
 }
-
-    
