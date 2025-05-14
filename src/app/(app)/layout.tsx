@@ -8,11 +8,8 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    // Ensure SidebarProvider wraps AppSidebar if AppSidebar itself doesn't include it at its root
-    // Based on current AppSidebar structure, it already includes SidebarProvider.
-    // If error persists, wrapping here might be necessary, but usually provider is in the component itself.
-    // <SidebarProvider defaultOpen> 
+    // AppSidebar already includes SidebarProvider internally.
+    // If a user is not authenticated, the middleware should redirect them before this layout is rendered for protected routes.
     <AppSidebar>{children}</AppSidebar>
-    // </SidebarProvider>
   );
 }

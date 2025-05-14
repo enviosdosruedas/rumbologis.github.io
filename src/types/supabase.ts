@@ -49,12 +49,12 @@ export interface Database {
           vehiculo_asignado: string | null
           created_at?: string | null
           updated_at?: string | null
-          rol?: string | null // Added
-          usuario?: string | null // Added, Unique
-          auth_user_id?: string | null // Added, FK to auth.users.id
+          rol?: string | null 
+          usuario?: string | null 
+          auth_user_id?: string | null // FK to auth.users.id
         }
         Insert: {
-          id: string // Should come from auth.users.id if it's the PK linked to auth
+          id: string 
           nombre: string
           identificacion: string
           telefono?: string | null
@@ -81,7 +81,7 @@ export interface Database {
           {
             foreignKeyName: "repartidores_auth_user_id_fkey"
             columns: ["auth_user_id"]
-            referencedRelation: "users"
+            referencedRelation: "users" // This references supabase.auth.users
             referencedColumns: ["id"]
           }
         ]
@@ -202,6 +202,33 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      }
+      usuarios: { // Nueva tabla usuarios
+        Row: {
+          codigo: number
+          nombre: string
+          pass: string // ADVERTENCIA: Debería ser un hash
+          rol: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Insert: {
+          codigo?: number // Autoincremental
+          nombre: string
+          pass: string // ADVERTENCIA: Debería ser un hash
+          rol: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          codigo?: number
+          nombre?: string
+          pass?: string // ADVERTENCIA: Debería ser un hash
+          rol?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

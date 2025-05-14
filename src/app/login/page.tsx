@@ -11,9 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Ship } from 'lucide-react';
+import type { Database } from '@/types/supabase';
+
+type Usuario = Database['public']['Tables']['usuarios']['Row'];
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(''); // Using 'email' as Supabase uses it, but UI can say "Usuario"
+  const [nombre, setNombre] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -23,30 +26,53 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email, // Map form's "usuario" field to Supabase's "email"
-      password: password,
-    });
+    if (!supabase) {
+      toast({
+        title: "Error de Configuración",
+        description: "El cliente de Supabase no está disponible.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: user, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('nombre', nombre)
+      .eq('pass', password) // ADVERTENCIA: Comparación de contraseña en texto plano. MUY INSEGURO.
+      .single();
 
     setIsLoading(false);
 
-    if (error) {
+    if (error || !user) {
       toast({
         title: 'Error de Inicio de Sesión',
-        description: error.message || 'Usuario o contraseña incorrectos.',
+        description: 'Nombre de usuario o contraseña incorrectos.',
         variant: 'destructive',
       });
     } else {
+      // Set cookie with user data (nombre and rol)
+      // Note: This is a simple cookie for demonstration. For production, use secure, HttpOnly cookies with expiry.
+      const userData = JSON.stringify({ nombre: user.nombre, rol: user.rol, codigo: user.codigo });
+      document.cookie = `userData=${userData}; path=/; max-age=${60 * 60 * 24 * 7}`; // Cookie for 7 days
+
       toast({
         title: 'Inicio de Sesión Exitoso',
         description: 'Redirigiendo...',
         variant: 'default',
         className: "bg-accent text-accent-foreground"
       });
-      // Check user role after login if needed, then redirect accordingly
-      // For now, redirecting all successful logins to dashboardrepartomobile
-      router.push('/dashboardrepartomobile'); 
-      router.refresh(); // Ensure page reloads to reflect auth state
+
+      if (user.rol === 'admin') {
+        router.push('/dashboard');
+      } else if (user.rol === 'repartidor') {
+        router.push('/dashboardrepartomobile');
+      } else {
+        // Fallback, though ideally all users have a defined role and redirect
+        router.push('/');
+      }
+      router.refresh(); 
     }
   };
 
@@ -63,13 +89,13 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Usuario</Label>
+              <Label htmlFor="nombre">Nombre de Usuario</Label>
               <Input
-                id="email"
-                type="text" // Changed to text if 'usuario' is not an email format
-                placeholder="su_usuario" // Or "usuario@ejemplo.com" if it must be email
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="nombre"
+                type="text"
+                placeholder="su_usuario"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 required
                 className="text-base"
               />

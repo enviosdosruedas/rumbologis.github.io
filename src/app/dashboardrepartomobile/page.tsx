@@ -2,35 +2,52 @@
 "use client";
 
 import type React from 'react';
-import { useEffect, useState }
-from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+// Supabase client might still be needed for other data operations, but not for auth.getSession or signOut
+// import { supabase } from '@/lib/supabaseClient'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, UserCircle, Truck } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+
+interface UserData {
+  nombre: string;
+  rol: string;
+  codigo: number;
+}
+
+// Helper function to get cookie (can be moved to a utils file)
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
 
 export default function DashboardRepartoMobilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        router.push('/login'); // Should be handled by middleware, but good failsafe
+    const cookieData = getCookie('userData');
+    if (cookieData) {
+      try {
+        const parsedData: UserData = JSON.parse(cookieData);
+        setUserData(parsedData);
+      } catch (e) {
+        console.error("Failed to parse user data from cookie", e);
+        router.push('/login'); // Corrupted cookie, force login
       }
-      setIsLoading(false);
-    };
-    fetchUser();
+    } else {
+      router.push('/login'); // No cookie, force login
+    }
+    setIsLoading(false);
   }, [router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // Clear the custom userData cookie
+    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.push('/login');
     router.refresh(); 
   };
@@ -43,8 +60,8 @@ export default function DashboardRepartoMobilePage() {
     );
   }
   
-  if (!user) {
-     // This case should ideally be handled by middleware redirecting to /login
+  if (!userData) {
+    // This case is mostly handled by useEffect redirect, but as a fallback
     return (
        <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-destructive">No autenticado. Redirigiendo...</p>
@@ -73,7 +90,7 @@ export default function DashboardRepartoMobilePage() {
               <div>
                 <CardTitle className="text-2xl">¡Bienvenido!</CardTitle>
                 <CardDescription className="text-sm">
-                  {user?.email || 'Repartidor'} 
+                  {userData.nombre || 'Repartidor'} (Rol: {userData.rol})
                 </CardDescription>
               </div>
             </div>
