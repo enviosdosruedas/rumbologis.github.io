@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ship, Users2, Truck, ClipboardList, Route, LayoutDashboard } from "lucide-react"; // Added Route for Repartos & LayoutDashboard
+import { Ship, Users2, Truck, ClipboardList, Route, LayoutDashboard, Waypoints } from "lucide-react"; // Added Waypoints for Optimizar Ruta
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
@@ -21,15 +21,14 @@ import {
   SheetHeader as ShadcnSheetHeader, 
   SheetTitle as ShadcnSheetTitle    
 } from "@/components/ui/sheet"; 
-// Button import might not be directly used here anymore, but keeping for safety unless cleanup is requested.
-// import { Button } from "@/components/ui/button"; 
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }, // New item for Dashboard
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clientes", label: "Clientes", icon: Users2 },
   { href: "/repartidores", label: "Repartidores", icon: Truck },
   { href: "/clientes-reparto", label: "Clientes Reparto", icon: ClipboardList },
   { href: "/repartos", label: "Repartos", icon: Route }, 
+  { href: "/optimizar-ruta", label: "Optimizar Ruta", icon: Waypoints }, // New item for Optimizar Ruta
 ];
 
 // Internal component to consume SidebarContext
@@ -96,4 +95,3 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
